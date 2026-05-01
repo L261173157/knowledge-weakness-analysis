@@ -57,6 +57,20 @@ public class WeaknessCandidateSelectorTests
         candidates.Single().TeacherComment.Should().Be("少答交通");
     }
 
+    [Fact]
+    public void Matcher_handles_model_question_number_variants()
+    {
+        var paper = Paper(
+            reviewedAt: DateTime.UtcNow,
+            Question("2", "青藏地区河谷农业发展的原因。", isCorrect: false, teacherComment: null),
+            Question("4", "在青藏地区可以品尝到的当地特产。", isCorrect: false, teacherComment: null));
+        var candidates = WeaknessCandidateSelector.Select([paper]);
+
+        var matched = WeaknessCandidateMatcher.MatchByQuestionNumbers(candidates, ["第2题、Q4"]);
+
+        matched.Select(x => x.QuestionNumber).Should().Equal("2", "4");
+    }
+
     private static Paper Paper(DateTime? reviewedAt, params Question[] questions)
     {
         return new Paper

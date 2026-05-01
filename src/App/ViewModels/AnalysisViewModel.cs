@@ -99,8 +99,8 @@ public partial class AnalysisViewModel : ViewModelBase
 
             foreach (var point in result.Points)
             {
-                var relatedCandidates = candidates
-                    .Where(x => point.QuestionNumbers.Contains(x.QuestionNumber))
+                var relatedCandidates = WeaknessCandidateMatcher
+                    .MatchByQuestionNumbers(candidates, point.QuestionNumbers)
                     .ToList();
 
                 var row = new WeaknessPointRow

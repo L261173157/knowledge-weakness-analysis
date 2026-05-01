@@ -1,0 +1,16 @@
+<Solution>
+  <Folder Name="/src/" />
+  <Folder Name="/src/App/">
+    <Project Path="src/App/KnowledgeWeakness.App.csproj" />
+  </Folder>
+  <Folder Name="/src/Core/">
+    <Project Path="src/Core/KnowledgeWeakness.Core.csproj" />
+  </Folder>
+  <Folder Name="/src/Infrastructure/">
+    <Project Path="src/Infrastructure/KnowledgeWeakness.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/" />
+  <Folder Name="/tests/Tests/">
+    <Project Path="tests/Tests/KnowledgeWeakness.Tests.csproj" />
+  </Folder>
+</Solution>

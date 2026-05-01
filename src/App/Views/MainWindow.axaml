@@ -1,0 +1,71 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:KnowledgeWeakness.App.ViewModels"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="720"
+        x:Class="KnowledgeWeakness.App.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Title="知识薄弱分析"
+        Width="1200" Height="720"
+        MinWidth="960" MinHeight="600">
+
+    <Grid ColumnDefinitions="220,*">
+        <Border Grid.Column="0" Background="#1F2937">
+            <StackPanel Margin="0,16">
+                <TextBlock Text="知识薄弱分析"
+                           Foreground="White" FontSize="18" FontWeight="Bold"
+                           Margin="16,0,0,16"/>
+
+                <Button Content="学生"
+                        Command="{Binding GoToStudentsCommand}"
+                        HorizontalContentAlignment="Left"
+                        HorizontalAlignment="Stretch"
+                        Padding="16,10"
+                        Background="Transparent"
+                        Foreground="White"
+                        BorderThickness="0"/>
+                <Button Content="学科"
+                        Command="{Binding GoToSubjectsCommand}"
+                        HorizontalContentAlignment="Left"
+                        HorizontalAlignment="Stretch"
+                        Padding="16,10"
+                        Background="Transparent"
+                        Foreground="White"
+                        BorderThickness="0"/>
+                <Button Content="卷子导入"
+                        Command="{Binding GoToImportCommand}"
+                        HorizontalContentAlignment="Left"
+                        HorizontalAlignment="Stretch"
+                        Padding="16,10"
+                        Background="Transparent"
+                        Foreground="White"
+                        BorderThickness="0"/>
+                <Button Content="薄弱分析"
+                        Command="{Binding GoToAnalysisCommand}"
+                        HorizontalContentAlignment="Left"
+                        HorizontalAlignment="Stretch"
+                        Padding="16,10"
+                        Background="Transparent"
+                        Foreground="White"
+                        BorderThickness="0"/>
+                <Button Content="设置"
+                        Command="{Binding GoToSettingsCommand}"
+                        HorizontalContentAlignment="Left"
+                        HorizontalAlignment="Stretch"
+                        Padding="16,10"
+                        Background="Transparent"
+                        Foreground="White"
+                        BorderThickness="0"/>
+            </StackPanel>
+        </Border>
+
+        <DockPanel Grid.Column="1" Background="#F8FAFC">
+            <Border DockPanel.Dock="Top" Background="White" Padding="24,14" BorderBrush="#E5E7EB" BorderThickness="0,0,0,1">
+                <TextBlock Text="{Binding CurrentPageTitle}"
+                           FontSize="20" FontWeight="SemiBold"/>
+            </Border>
+            <ContentControl Content="{Binding CurrentPage}" Margin="24"/>
+        </DockPanel>
+    </Grid>
+</Window>

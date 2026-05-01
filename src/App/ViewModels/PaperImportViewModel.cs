@@ -36,6 +36,7 @@ public partial class PaperImportViewModel : ViewModelBase
     [ObservableProperty] private DateTime? _paperDate = DateTime.Today;
     [ObservableProperty] private string _status = "";
     [ObservableProperty] private bool _isBusy;
+    [ObservableProperty] private bool _isReviewConfirmed;
     [ObservableProperty] private string _rawJson = "";
 
     public Array QuestionTypes { get; } = Enum.GetValues(typeof(QuestionType));
@@ -91,6 +92,7 @@ public partial class PaperImportViewModel : ViewModelBase
     {
         Images.Clear();
         Questions.Clear();
+        IsReviewConfirmed = false;
         RawJson = "";
     }
 
@@ -116,6 +118,7 @@ public partial class PaperImportViewModel : ViewModelBase
 
             var result = await model.ExtractPaperAsync(normalized, context);
             RawJson = result.RawJson;
+            IsReviewConfirmed = false;
 
             Questions.Clear();
             foreach (var q in result.Questions)
@@ -151,6 +154,7 @@ public partial class PaperImportViewModel : ViewModelBase
         if (SelectedStudent is null) { Status = "请选择学生"; return; }
         if (SelectedSubject is null) { Status = "请选择学科"; return; }
         if (Questions.Count == 0) { Status = "没有题目可保存，请先识别"; return; }
+        if (!IsReviewConfirmed) { Status = "请先确认已完成逐题校对，再保存入库"; return; }
 
         try
         {

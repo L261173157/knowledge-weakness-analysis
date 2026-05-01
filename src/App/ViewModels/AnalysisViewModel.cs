@@ -1,11 +1,14 @@
+using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using KnowledgeWeakness.Core.AI;
 using KnowledgeWeakness.Core.Abstractions;
 using KnowledgeWeakness.Core.Analysis;
 using KnowledgeWeakness.Core.Domain;
+using KnowledgeWeakness.Infrastructure.Analysis;
 
 namespace KnowledgeWeakness.App.ViewModels;
 
@@ -14,6 +17,8 @@ public partial class AnalysisViewModel : ViewModelBase
     private readonly IPaperRepository _paperRepo;
     private readonly IStudentRepository _studentRepo;
     private readonly ISubjectRepository _subjectRepo;
+    private readonly IWeaknessAnalyzer _weaknessAnalyzer;
+    private readonly KnowledgeBaseReader _knowledgeBaseReader;
 
     public ObservableCollection<Student> Students { get; } = new();
     public ObservableCollection<Subject> Subjects { get; } = new();
@@ -23,6 +28,9 @@ public partial class AnalysisViewModel : ViewModelBase
     [ObservableProperty] private Student? _selectedStudent;
     [ObservableProperty] private Subject? _selectedSubject;
     [ObservableProperty] private WeaknessPointRow? _selectedPoint;
+    [ObservableProperty] private string _selectedWeakReason = "";
+    [ObservableProperty] private string _selectedReviewAdvice = "";
+    [ObservableProperty] private string _selectedPracticeDirection = "";
     [ObservableProperty] private string _summary = "暂无分析数据";
     [ObservableProperty] private string _status = "";
     [ObservableProperty] private bool _isBusy;
@@ -30,17 +38,24 @@ public partial class AnalysisViewModel : ViewModelBase
     public AnalysisViewModel(
         IPaperRepository paperRepo,
         IStudentRepository studentRepo,
-        ISubjectRepository subjectRepo)
+        ISubjectRepository subjectRepo,
+        IWeaknessAnalyzer weaknessAnalyzer,
+        KnowledgeBaseReader knowledgeBaseReader)
     {
         _paperRepo = paperRepo;
         _studentRepo = studentRepo;
         _subjectRepo = subjectRepo;
+        _weaknessAnalyzer = weaknessAnalyzer;
+        _knowledgeBaseReader = knowledgeBaseReader;
         _ = LoadAsync();
     }
 
     partial void OnSelectedPointChanged(WeaknessPointRow? value)
     {
         Examples.Clear();
+        SelectedWeakReason = value?.WeakReason ?? "";
+        SelectedReviewAdvice = value?.ReviewAdvice ?? "";
+        SelectedPracticeDirection = value?.PracticeDirection ?? "";
         if (value is null) return;
         foreach (var example in value.Examples)
             Examples.Add(example);
@@ -61,21 +76,47 @@ public partial class AnalysisViewModel : ViewModelBase
             if (SelectedSubject is not null)
                 papers = papers.Where(p => p.SubjectId == SelectedSubject.Id).ToList();
 
-            var result = WeaknessAnalysisService.Analyze(papers);
+            var candidates = WeaknessCandidateSelector.Select(papers);
             Points.Clear();
             Examples.Clear();
+            if (candidates.Count == 0)
+            {
+                Summary = $"卷子 {papers.Count} 份，没有可进入分析的薄弱题";
+                Status = "未发现已人工确认且明确批改的错题/扣分题。";
+                return;
+            }
+
+            var studentName = SelectedStudent?.Name ?? candidates.FirstOrDefault()?.StudentName ?? "";
+            var studentGrade = SelectedStudent?.Grade ?? candidates.FirstOrDefault()?.StudentGrade ?? "";
+            var subjectName = SelectedSubject?.Name ?? candidates.FirstOrDefault()?.SubjectName ?? "";
+            var knowledgeBase = await _knowledgeBaseReader.ReadAsync(SelectedSubject?.KnowledgeBasePath);
+            var result = await _weaknessAnalyzer.AnalyzeAsync(new AiWeaknessAnalysisRequest(
+                studentName,
+                studentGrade,
+                subjectName,
+                knowledgeBase,
+                candidates));
 
             foreach (var point in result.Points)
             {
+                var relatedCandidates = candidates
+                    .Where(x => point.QuestionNumbers.Contains(x.QuestionNumber))
+                    .ToList();
+
                 var row = new WeaknessPointRow
                 {
                     KnowledgePoint = point.KnowledgePoint,
-                    WrongCount = point.WrongCount,
-                    TotalCount = point.TotalCount,
-                    WrongRate = point.WrongRate
+                    Severity = point.Severity,
+                    WeakReason = point.WeakReason,
+                    ReviewAdvice = point.ReviewAdvice,
+                    PracticeDirection = point.PracticeDirection,
+                    QuestionNumbersText = string.Join(", ", point.QuestionNumbers),
+                    WrongCount = relatedCandidates.Count,
+                    TotalCount = candidates.Count,
+                    WrongRate = candidates.Count == 0 ? 0 : (double)relatedCandidates.Count / candidates.Count
                 };
 
-                foreach (var example in point.Examples)
+                foreach (var example in relatedCandidates.Take(5))
                 {
                     row.Examples.Add(new WeakQuestionExampleRow
                     {
@@ -93,8 +134,16 @@ public partial class AnalysisViewModel : ViewModelBase
             }
 
             SelectedPoint = Points.FirstOrDefault();
-            Summary = $"卷子 {result.TotalPapers} 份，题目 {result.TotalQuestions} 道，薄弱题 {result.TotalWeakQuestions} 道";
-            Status = Points.Count == 0 ? "暂无薄弱点。请先导入并保存已批改卷子。" : $"已生成 {Points.Count} 个薄弱点";
+            Summary = $"卷子 {papers.Count} 份，候选薄弱题 {candidates.Count} 道。AI 总结：{result.Summary}";
+            Status = Points.Count == 0
+                ? "AI 未返回薄弱点，请重试或检查候选题内容。"
+                : knowledgeBase is null
+                    ? $"已生成 {Points.Count} 个薄弱点。未使用知识库。"
+                    : $"已生成 {Points.Count} 个薄弱点。已接入知识库。";
+        }
+        catch (Exception ex)
+        {
+            Status = "分析失败：" + ex.Message;
         }
         finally
         {

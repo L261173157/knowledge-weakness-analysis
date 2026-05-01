@@ -59,28 +59,41 @@
                       HeadersVisibility="Column">
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="知识点" Binding="{Binding KnowledgePoint}" Width="*"/>
+                    <DataGridTextColumn Header="严重度" Binding="{Binding Severity}" Width="70"/>
                     <DataGridTextColumn Header="薄弱题" Binding="{Binding WrongCount}" Width="80"/>
-                    <DataGridTextColumn Header="总题" Binding="{Binding TotalCount}" Width="70"/>
-                    <DataGridTextColumn Header="错误率" Binding="{Binding WrongRateText}" Width="80"/>
+                    <DataGridTextColumn Header="占比" Binding="{Binding WrongRateText}" Width="70"/>
+                    <DataGridTextColumn Header="题号" Binding="{Binding QuestionNumbersText}" Width="100"/>
                 </DataGrid.Columns>
             </DataGrid>
         </Border>
 
         <Border Grid.Row="1" Grid.Column="1" Background="White"
                 CornerRadius="8" BorderBrush="#E5E7EB" BorderThickness="1">
-            <DataGrid ItemsSource="{Binding Examples}"
-                      IsReadOnly="True"
-                      GridLinesVisibility="Horizontal"
-                      HeadersVisibility="Column">
-                <DataGrid.Columns>
-                    <DataGridTextColumn Header="卷子" Binding="{Binding PaperTitle}" Width="140"/>
-                    <DataGridTextColumn Header="题号" Binding="{Binding QuestionNumber}" Width="60"/>
-                    <DataGridTextColumn Header="题干" Binding="{Binding Stem}" Width="2*"/>
-                    <DataGridTextColumn Header="学生答案" Binding="{Binding StudentAnswer}" Width="*"/>
-                    <DataGridTextColumn Header="标准答案" Binding="{Binding StandardAnswer}" Width="*"/>
-                    <DataGridTextColumn Header="批注" Binding="{Binding TeacherComment}" Width="*"/>
-                </DataGrid.Columns>
-            </DataGrid>
+            <Grid RowDefinitions="Auto,Auto,Auto,*" Margin="16">
+                <StackPanel Grid.Row="0" Spacing="6">
+                    <TextBlock Text="薄弱原因" FontWeight="SemiBold"/>
+                    <TextBlock Text="{Binding SelectedWeakReason}" TextWrapping="Wrap"/>
+                    <TextBlock Text="复习建议" FontWeight="SemiBold" Margin="0,8,0,0"/>
+                    <TextBlock Text="{Binding SelectedReviewAdvice}" TextWrapping="Wrap"/>
+                    <TextBlock Text="练习方向" FontWeight="SemiBold" Margin="0,8,0,0"/>
+                    <TextBlock Text="{Binding SelectedPracticeDirection}" TextWrapping="Wrap"/>
+                </StackPanel>
+
+                <TextBlock Grid.Row="1" Text="关联错题" FontWeight="SemiBold" Margin="0,16,0,8"/>
+                <DataGrid Grid.Row="3"
+                          ItemsSource="{Binding Examples}"
+                          IsReadOnly="True"
+                          GridLinesVisibility="Horizontal"
+                          HeadersVisibility="Column">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="卷子" Binding="{Binding PaperTitle}" Width="130"/>
+                        <DataGridTextColumn Header="题号" Binding="{Binding QuestionNumber}" Width="55"/>
+                        <DataGridTextColumn Header="题干" Binding="{Binding Stem}" Width="2*"/>
+                        <DataGridTextColumn Header="学生答案" Binding="{Binding StudentAnswer}" Width="*"/>
+                        <DataGridTextColumn Header="批注" Binding="{Binding TeacherComment}" Width="*"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Grid>
         </Border>
 
         <TextBlock Grid.Row="2" Grid.ColumnSpan="2"

@@ -5,6 +5,11 @@ namespace KnowledgeWeakness.App.ViewModels;
 public class WeaknessPointRow
 {
     public string KnowledgePoint { get; init; } = "";
+    public string Severity { get; init; } = "";
+    public string WeakReason { get; init; } = "";
+    public string ReviewAdvice { get; init; } = "";
+    public string PracticeDirection { get; init; } = "";
+    public string QuestionNumbersText { get; init; } = "";
     public int WrongCount { get; init; }
     public int TotalCount { get; init; }
     public double WrongRate { get; init; }

@@ -1,6 +1,7 @@
 using KnowledgeWeakness.Core.AI;
 using KnowledgeWeakness.Core.Abstractions;
 using KnowledgeWeakness.Infrastructure.AI;
+using KnowledgeWeakness.Infrastructure.Analysis;
 using KnowledgeWeakness.Infrastructure.Imaging;
 using KnowledgeWeakness.Infrastructure.Persistence;
 using KnowledgeWeakness.Infrastructure.Repositories;
@@ -22,6 +23,20 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddHttpClient("glm", c => c.Timeout = TimeSpan.FromSeconds(300));
 
         services.AddSingleton<IVisionModelFactory, VisionModelFactory>();
+        services.AddSingleton<IWeaknessAnalyzer>(sp =>
+        {
+            var settings = sp.GetRequiredService<ISettingsRepository>();
+            var opts = new GlmVisionOptions
+            {
+                ApiKey = settings.GetSecretAsync(SettingsKeys.GlmApiKey).GetAwaiter().GetResult(),
+                Model = settings.GetAsync(SettingsKeys.GlmModel).GetAwaiter().GetResult() ?? "glm-4.6v"
+            };
+            return new GlmWeaknessAnalyzer(
+                sp.GetRequiredService<IHttpClientFactory>().CreateClient("glm"),
+                opts,
+                sp.GetRequiredService<Microsoft.Extensions.Logging.ILogger<GlmWeaknessAnalyzer>>());
+        });
+        services.AddSingleton(new KnowledgeBaseReader(Path.Combine(AppContext.BaseDirectory, "knowledge-bases")));
         services.AddSingleton<ImagePreprocessor>();
 
         return services;

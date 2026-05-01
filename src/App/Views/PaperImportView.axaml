@@ -56,6 +56,9 @@
                     <Button Content="保存入库" Command="{Binding SaveCommand}"
                             IsEnabled="{Binding !IsBusy}"/>
                 </StackPanel>
+                <CheckBox Content="我已完成逐题校对，确认这份卷子可进入薄弱分析"
+                          IsChecked="{Binding IsReviewConfirmed}"
+                          Margin="0,2,0,0"/>
                 <TextBox Text="{Binding Status}" IsReadOnly="True"
                          TextWrapping="Wrap" AcceptsReturn="True"
                          MaxHeight="120" Foreground="#374151" FontSize="12"

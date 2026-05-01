@@ -31,11 +31,10 @@ public static class WeaknessCandidateSelector
     private static bool IsUnreviewed(StudentAnswer answer)
     {
         var comment = answer.TeacherComment?.Trim();
-        return string.IsNullOrWhiteSpace(comment)
-            ? !answer.IsCorrect && answer.PartialScore is null
-            : comment.Contains("未批改", StringComparison.Ordinal)
-              || comment.Contains("未判", StringComparison.Ordinal)
-              || comment.Contains("未评价", StringComparison.Ordinal);
+        return !string.IsNullOrWhiteSpace(comment)
+               && (comment.Contains("未批改", StringComparison.Ordinal)
+                   || comment.Contains("未判", StringComparison.Ordinal)
+                   || comment.Contains("未评价", StringComparison.Ordinal));
     }
 
     private static WeaknessCandidate ToCandidate(Paper paper, Question question)

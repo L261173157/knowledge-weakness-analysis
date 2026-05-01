@@ -31,6 +31,19 @@ public class WeaknessCandidateSelectorTests
     }
 
     [Fact]
+    public void Includes_incorrect_questions_even_when_teacher_comment_is_empty()
+    {
+        var paper = Paper(
+            reviewedAt: DateTime.UtcNow,
+            Question("1", "青藏地区河谷农业发展的原因。", isCorrect: false, teacherComment: null));
+
+        var candidates = WeaknessCandidateSelector.Select([paper]);
+
+        candidates.Should().ContainSingle();
+        candidates.Single().QuestionNumber.Should().Be("1");
+    }
+
+    [Fact]
     public void Includes_partial_score_questions_as_weakness_candidates()
     {
         var paper = Paper(

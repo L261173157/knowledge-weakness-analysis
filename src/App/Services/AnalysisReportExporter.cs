@@ -12,6 +12,14 @@ namespace KnowledgeWeakness.App.Services;
 
 public static class AnalysisReportExporter
 {
+    static AnalysisReportExporter()
+    {
+        // QuestPDF requires a license type to be set before generating any
+        // document. Community is free for qualifying projects; set it once at
+        // type init so the per-call builder doesn't repeat the assignment.
+        QuestPDF.Settings.License = LicenseType.Community;
+    }
+
     public static async Task<string> ExportAsync(AnalysisReportData report, string directory, string format)
     {
         Directory.CreateDirectory(directory);
@@ -37,7 +45,11 @@ public static class AnalysisReportExporter
                 await File.WriteAllTextAsync(path, BuildJson(report), new UTF8Encoding(false));
                 break;
             case "pdf":
-                BuildPdf(report).GeneratePdf(path);
+                // QuestPDF's GeneratePdf is synchronous and CPU-bound (font/layout
+                // work). Running it on the UI thread freezes the window, so push
+                // it to the thread pool. The license is configured once at first
+                // use below.
+                await Task.Run(() => BuildPdf(report).GeneratePdf(path));
                 break;
             default:
                 await File.WriteAllTextAsync(path, BuildMarkdown(report), new UTF8Encoding(false));
@@ -140,7 +152,6 @@ public static class AnalysisReportExporter
 
     private static IDocument BuildPdf(AnalysisReportData r)
     {
-        QuestPDF.Settings.License = LicenseType.Community;
         return Document.Create(c =>
         {
             c.Page(p =>

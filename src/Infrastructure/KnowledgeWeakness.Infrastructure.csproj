@@ -11,6 +11,14 @@
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.6" />
     <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="10.0.6" />
     <PackageReference Include="SkiaSharp" Version="3.116.1" />
+    <!--
+      EF Core Sqlite 10.0.6 pulls in SQLitePCLRaw.* 2.1.11, which bundles a SQLite
+      version affected by CVE-2025-6965 (GHSA-2m69-gcr7-jv3q). 2.1.12 is the patch
+      release on the same line that bundles SQLite >= 3.50.2. Pin it directly so the
+      transitive resolution upgrades instead of staying on the vulnerable 2.1.11.
+    -->
+    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="2.1.12" />
+    <PackageReference Include="SQLitePCLRaw.lib.e_sqlite3" Version="2.1.12" />
   </ItemGroup>
 
   <PropertyGroup>

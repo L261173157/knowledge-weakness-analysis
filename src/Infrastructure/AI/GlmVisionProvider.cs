@@ -69,7 +69,12 @@ public class GlmVisionProvider(
             throw new HttpRequestException($"GLM API 调用失败 ({(int)resp.StatusCode}): {respText}");
         }
 
-        var messageContent = ExtractAssistantContent(respText);
+        var messageContent = GlmResponseHelper.ExtractAssistantContent(respText);
+        if (string.IsNullOrEmpty(messageContent))
+        {
+            throw new InvalidOperationException(
+                "GLM 视觉模型未返回内容（可能是限流或内容审核拒绝），请稍后重试。");
+        }
         try
         {
             return VisionJsonParser.Parse(messageContent);
@@ -79,14 +84,5 @@ public class GlmVisionProvider(
             logger.LogError(ex, "Failed to parse GLM JSON: {Content}", messageContent);
             throw new InvalidOperationException("模型返回非法 JSON，请重试或更换 Provider。", ex);
         }
-    }
-
-    private static string ExtractAssistantContent(string respJson)
-    {
-        using var doc = JsonDocument.Parse(respJson);
-        var choices = doc.RootElement.GetProperty("choices");
-        var first = choices[0];
-        var msg = first.GetProperty("message");
-        return msg.GetProperty("content").GetString() ?? "";
     }
 }

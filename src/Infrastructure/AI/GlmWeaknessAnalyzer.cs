@@ -61,7 +61,12 @@ public class GlmWeaknessAnalyzer(
             throw new HttpRequestException($"GLM 薄弱分析调用失败 ({(int)resp.StatusCode}): {respText}");
         }
 
-        var messageContent = ExtractAssistantContent(respText);
+        var messageContent = GlmResponseHelper.ExtractAssistantContent(respText);
+        if (string.IsNullOrEmpty(messageContent))
+        {
+            throw new InvalidOperationException(
+                "GLM 语言模型未返回内容（可能是限流或内容审核拒绝），请稍后重试。");
+        }
         try
         {
             return AiWeaknessJsonParser.Parse(messageContent);
@@ -71,14 +76,5 @@ public class GlmWeaknessAnalyzer(
             logger.LogError(ex, "Failed to parse GLM weakness JSON: {Content}", messageContent);
             throw new InvalidOperationException("模型返回非法薄弱分析 JSON，请重试。", ex);
         }
-    }
-
-    private static string ExtractAssistantContent(string respJson)
-    {
-        using var doc = JsonDocument.Parse(respJson);
-        var choices = doc.RootElement.GetProperty("choices");
-        var first = choices[0];
-        var msg = first.GetProperty("message");
-        return msg.GetProperty("content").GetString() ?? "";
     }
 }

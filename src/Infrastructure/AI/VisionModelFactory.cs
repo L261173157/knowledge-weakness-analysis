@@ -13,25 +13,30 @@ public class VisionModelFactory(
 
     public IReadOnlyList<string> AvailableProviders { get; } = new[] { GlmCode };
 
-    public IVisionModel Create(string providerCode)
+    public async Task<IVisionModel> CreateAsync(string providerCode, CancellationToken ct = default)
     {
+        // All branches currently build a GLM provider, but keep the switch so the
+        // providerCode is honored when more providers are added.
         return providerCode switch
         {
-            GlmCode => CreateGlm(),
-            _ => CreateGlm()
+            GlmCode => await CreateGlmAsync(ct),
+            _ => await CreateGlmAsync(ct)
         };
     }
 
-    private GlmVisionProvider CreateGlm()
+    private async Task<GlmVisionProvider> CreateGlmAsync(CancellationToken ct)
     {
+        // Fully async — no .GetAwaiter().GetResult(). The previous sync version
+        // risked a UI-thread deadlock because DbContextFactory continuations need
+        // the same thread that GetResult blocks.
         var opts = new GlmVisionOptions
         {
-            ApiKey = settings.GetSecretAsync(SettingsKeys.VisionGlmApiKey).GetAwaiter().GetResult()
-                     ?? settings.GetSecretAsync(SettingsKeys.GlmApiKey).GetAwaiter().GetResult(),
-            Model = settings.GetAsync(SettingsKeys.VisionGlmModel).GetAwaiter().GetResult()
-                    ?? settings.GetAsync(SettingsKeys.GlmModel).GetAwaiter().GetResult()
+            ApiKey = await settings.GetSecretAsync(SettingsKeys.VisionGlmApiKey, ct)
+                     ?? await settings.GetSecretAsync(SettingsKeys.GlmApiKey, ct),
+            Model = await settings.GetAsync(SettingsKeys.VisionGlmModel, ct)
+                    ?? await settings.GetAsync(SettingsKeys.GlmModel, ct)
                     ?? "glm-4.6v",
-            BaseUrl = settings.GetAsync(SettingsKeys.VisionGlmBaseUrl).GetAwaiter().GetResult()
+            BaseUrl = await settings.GetAsync(SettingsKeys.VisionGlmBaseUrl, ct)
                       ?? "https://open.bigmodel.cn/api/paas/v4"
         };
         var client = httpFactory.CreateClient("glm");

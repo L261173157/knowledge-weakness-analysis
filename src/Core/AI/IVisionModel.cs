@@ -17,6 +17,6 @@ public interface IVisionModel
 
 public interface IVisionModelFactory
 {
-    IVisionModel Create(string providerCode);
+    Task<IVisionModel> CreateAsync(string providerCode, CancellationToken ct = default);
     IReadOnlyList<string> AvailableProviders { get; }
 }

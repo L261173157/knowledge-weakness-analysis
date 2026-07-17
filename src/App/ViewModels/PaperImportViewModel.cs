@@ -165,7 +165,7 @@ public partial class PaperImportViewModel : ViewModelBase
             var normalized = Images.Select(i => _preprocessor.NormalizeToJpeg(i.Bytes)).ToList();
 
             Status = "正在调用智谱 GLM 识别...";
-            var model = _visionFactory.Create(VisionModelFactory.GlmCode);
+            var model = await _visionFactory.CreateAsync(VisionModelFactory.GlmCode);
             var context = new SubjectContext(
                 SelectedSubject.Code,
                 SelectedSubject.Name,

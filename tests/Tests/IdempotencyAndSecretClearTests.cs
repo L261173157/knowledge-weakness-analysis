@@ -85,7 +85,8 @@ internal sealed class InMemorySettingsRepo : ISettingsRepository
 
 internal sealed class StubVisionFactory : IVisionModelFactory
 {
-    public IVisionModel Create(string providerCode) => throw new NotSupportedException();
+    public Task<IVisionModel> CreateAsync(string providerCode, CancellationToken ct = default)
+        => throw new NotSupportedException();
     public IReadOnlyList<string> AvailableProviders => Array.Empty<string>();
 }
 

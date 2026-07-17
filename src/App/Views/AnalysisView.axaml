@@ -4,100 +4,124 @@
              xmlns:domain="using:KnowledgeWeakness.Core.Domain"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="640"
+             mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="700"
              x:Class="KnowledgeWeakness.App.Views.AnalysisView"
              x:DataType="vm:AnalysisViewModel">
 
-    <Grid RowDefinitions="Auto,*,Auto" ColumnDefinitions="2*,3*">
-        <Border Grid.Row="0" Grid.ColumnSpan="2" Background="White"
-                CornerRadius="8" Padding="16" Margin="0,0,0,12"
-                BorderBrush="#E5E7EB" BorderThickness="1">
-            <Grid ColumnDefinitions="Auto,180,Auto,180,*,Auto,Auto" RowDefinitions="Auto,Auto">
-                <TextBlock Grid.Row="0" Grid.Column="0" Text="学生" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                <ComboBox Grid.Row="0" Grid.Column="1"
-                          ItemsSource="{Binding Students}"
-                          SelectedItem="{Binding SelectedStudent}"
-                          HorizontalAlignment="Stretch">
-                    <ComboBox.ItemTemplate>
-                        <DataTemplate DataType="domain:Student">
-                            <TextBlock Text="{Binding Name}"/>
-                        </DataTemplate>
-                    </ComboBox.ItemTemplate>
-                </ComboBox>
+    <Grid RowDefinitions="Auto,*,Auto" ColumnDefinitions="2*,3*" RowSpacing="16" ColumnSpacing="16">
+        <Border Grid.Row="0" Grid.ColumnSpan="2" Classes="card" Padding="18">
+            <StackPanel Spacing="12">
+                <Grid ColumnDefinitions="Auto,190,Auto,190,*,Auto,Auto,Auto" ColumnSpacing="10">
+                    <TextBlock Grid.Column="0" Classes="field-label" Text="学生"/>
+                    <ComboBox Grid.Column="1"
+                              ItemsSource="{Binding Students}"
+                              SelectedItem="{Binding SelectedStudent}"
+                              HorizontalAlignment="Stretch">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate DataType="domain:Student">
+                                <TextBlock Text="{Binding Name}"/>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                    <TextBlock Grid.Column="2" Classes="field-label" Text="学科"/>
+                    <ComboBox Grid.Column="3"
+                              ItemsSource="{Binding Subjects}"
+                              SelectedItem="{Binding SelectedSubject}"
+                              HorizontalAlignment="Stretch">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate DataType="domain:Subject">
+                                <TextBlock Text="{Binding Name}"/>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
 
-                <TextBlock Grid.Row="0" Grid.Column="2" Text="学科" VerticalAlignment="Center" Margin="16,0,8,0"/>
-                <ComboBox Grid.Row="0" Grid.Column="3"
-                          ItemsSource="{Binding Subjects}"
-                          SelectedItem="{Binding SelectedSubject}"
-                          HorizontalAlignment="Stretch">
-                    <ComboBox.ItemTemplate>
-                        <DataTemplate DataType="domain:Subject">
-                            <TextBlock Text="{Binding Name}"/>
-                        </DataTemplate>
-                    </ComboBox.ItemTemplate>
-                </ComboBox>
+                    <Button Grid.Column="5" Content="刷新结果"
+                            Command="{Binding LoadCommand}" Classes="accent"
+                            IsEnabled="{Binding !IsBusy}"/>
+                    <Button Grid.Column="6" Content="AI 分析薄弱点"
+                            Command="{Binding AnalyzeAiCommand}"
+                            IsEnabled="{Binding !IsBusy}"/>
+                    <Button Grid.Column="7" Content="清除筛选"
+                            Command="{Binding ClearFilterCommand}"/>
+                </Grid>
 
-                <Button Grid.Row="0" Grid.Column="5" Content="刷新分析"
-                        Command="{Binding LoadCommand}" Classes="accent"
-                        IsEnabled="{Binding !IsBusy}" Margin="16,0,0,0"/>
-                <Button Grid.Row="0" Grid.Column="6" Content="清除筛选"
-                        Command="{Binding ClearFilterCommand}" Margin="8,0,0,0"/>
-
-                <TextBlock Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="7"
-                           Text="{Binding Summary}" Margin="0,12,0,0"
-                           Foreground="#374151" FontWeight="SemiBold"/>
-            </Grid>
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                    <Border Grid.Column="0" Classes="summary-pill">
+                        <TextBlock Text="{Binding Summary}"
+                                   Foreground="#334155"
+                                   FontWeight="SemiBold"
+                                   TextWrapping="Wrap"/>
+                    </Border>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                        <Button Content="导出 PDF" Command="{Binding ExportCommand}" CommandParameter="PDF"/>
+                        <Button Content="按设置导出" Command="{Binding ExportCommand}"/>
+                    </StackPanel>
+                </Grid>
+            </StackPanel>
         </Border>
 
-        <Border Grid.Row="1" Grid.Column="0" Background="White"
-                CornerRadius="8" BorderBrush="#E5E7EB" BorderThickness="1"
-                Margin="0,0,12,0">
-            <DataGrid ItemsSource="{Binding Points}"
-                      SelectedItem="{Binding SelectedPoint}"
-                      IsReadOnly="True"
-                      GridLinesVisibility="Horizontal"
-                      HeadersVisibility="Column">
-                <DataGrid.Columns>
-                    <DataGridTextColumn Header="知识点" Binding="{Binding KnowledgePoint}" Width="*"/>
-                    <DataGridTextColumn Header="严重度" Binding="{Binding Severity}" Width="70"/>
-                    <DataGridTextColumn Header="薄弱题" Binding="{Binding WrongCount}" Width="80"/>
-                    <DataGridTextColumn Header="占比" Binding="{Binding WrongRateText}" Width="70"/>
-                    <DataGridTextColumn Header="题号" Binding="{Binding QuestionNumbersText}" Width="100"/>
-                </DataGrid.Columns>
-            </DataGrid>
-        </Border>
-
-        <Border Grid.Row="1" Grid.Column="1" Background="White"
-                CornerRadius="8" BorderBrush="#E5E7EB" BorderThickness="1">
-            <Grid RowDefinitions="Auto,Auto,Auto,*" Margin="16">
-                <StackPanel Grid.Row="0" Spacing="6">
-                    <TextBlock Text="薄弱原因" FontWeight="SemiBold"/>
-                    <TextBlock Text="{Binding SelectedWeakReason}" TextWrapping="Wrap"/>
-                    <TextBlock Text="复习建议" FontWeight="SemiBold" Margin="0,8,0,0"/>
-                    <TextBlock Text="{Binding SelectedReviewAdvice}" TextWrapping="Wrap"/>
-                    <TextBlock Text="练习方向" FontWeight="SemiBold" Margin="0,8,0,0"/>
-                    <TextBlock Text="{Binding SelectedPracticeDirection}" TextWrapping="Wrap"/>
-                </StackPanel>
-
-                <TextBlock Grid.Row="1" Text="关联错题" FontWeight="SemiBold" Margin="0,16,0,8"/>
-                <DataGrid Grid.Row="3"
-                          ItemsSource="{Binding Examples}"
+        <Border Grid.Row="1" Grid.Column="0" Classes="card-flush">
+            <Grid RowDefinitions="Auto,*">
+                <TextBlock Grid.Row="0" Text="薄弱知识点"
+                           Classes="section-title"
+                           Margin="16,14,16,10"/>
+                <DataGrid Grid.Row="1"
+                          ItemsSource="{Binding Points}"
+                          SelectedItem="{Binding SelectedPoint}"
                           IsReadOnly="True"
-                          GridLinesVisibility="Horizontal"
-                          HeadersVisibility="Column">
+                          HeadersVisibility="Column"
+                          CanUserResizeColumns="True"
+                          HorizontalScrollBarVisibility="Auto">
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="卷子" Binding="{Binding PaperTitle}" Width="130"/>
-                        <DataGridTextColumn Header="题号" Binding="{Binding QuestionNumber}" Width="55"/>
-                        <DataGridTextColumn Header="题干" Binding="{Binding Stem}" Width="2*"/>
-                        <DataGridTextColumn Header="学生答案" Binding="{Binding StudentAnswer}" Width="*"/>
-                        <DataGridTextColumn Header="批注" Binding="{Binding TeacherComment}" Width="*"/>
+                        <DataGridTextColumn Header="知识点" Binding="{Binding KnowledgePoint}" Width="*" MinWidth="100"/>
+                        <DataGridTextColumn Header="严重" Binding="{Binding Severity}" Width="70"/>
+                        <DataGridTextColumn Header="错题" Binding="{Binding WrongCount}" Width="64"/>
+                        <DataGridTextColumn Header="占比" Binding="{Binding WrongRateText}" Width="64"/>
+                        <DataGridTextColumn Header="题号" Binding="{Binding QuestionNumbersText}" Width="110"/>
                     </DataGrid.Columns>
                 </DataGrid>
             </Grid>
         </Border>
 
-        <TextBlock Grid.Row="2" Grid.ColumnSpan="2"
-                   Text="{Binding Status}" Margin="0,12,0,0"
-                   Foreground="#6B7280" FontSize="12"/>
+        <Border Grid.Row="1" Grid.Column="1" Classes="card-flush">
+            <Grid RowDefinitions="Auto,*,Auto,*" Margin="18" RowSpacing="12">
+                <TextBlock Grid.Row="0" Text="分析详情" Classes="section-title"/>
+                <Border Grid.Row="1"
+                        Background="{StaticResource SubtlePanelBrush}"
+                        CornerRadius="8"
+                        Padding="14">
+                    <ScrollViewer>
+                        <StackPanel Spacing="10">
+                            <TextBlock Text="薄弱原因" FontWeight="SemiBold"/>
+                            <TextBlock Text="{Binding SelectedWeakReason}" TextWrapping="Wrap"/>
+                            <TextBlock Text="复习建议" FontWeight="SemiBold" Margin="0,6,0,0"/>
+                            <TextBlock Text="{Binding SelectedReviewAdvice}" TextWrapping="Wrap"/>
+                            <TextBlock Text="练习方向" FontWeight="SemiBold" Margin="0,6,0,0"/>
+                            <TextBlock Text="{Binding SelectedPracticeDirection}" TextWrapping="Wrap"/>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Border>
+
+                <TextBlock Grid.Row="2" Text="关联错题" FontWeight="SemiBold"/>
+                <DataGrid Grid.Row="3"
+                          ItemsSource="{Binding Examples}"
+                          IsReadOnly="True"
+                          HeadersVisibility="Column"
+                          CanUserResizeColumns="True"
+                          HorizontalScrollBarVisibility="Auto">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="卷子" Binding="{Binding PaperTitle}" Width="140" MinWidth="100"/>
+                        <DataGridTextColumn Header="题号" Binding="{Binding QuestionNumber}" Width="64"/>
+                        <DataGridTextColumn Header="题干" Binding="{Binding Stem}" Width="2*" MinWidth="160"/>
+                        <DataGridTextColumn Header="学生答案" Binding="{Binding StudentAnswer}" Width="*" MinWidth="100"/>
+                        <DataGridTextColumn Header="批注" Binding="{Binding TeacherComment}" Width="*" MinWidth="100"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Grid>
+        </Border>
+
+        <Border Grid.Row="2" Grid.ColumnSpan="2" Classes="status-bar">
+            <TextBlock Text="{Binding Status}" Classes="status-text"/>
+        </Border>
     </Grid>
 </UserControl>

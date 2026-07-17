@@ -2,15 +2,208 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="KnowledgeWeakness.App.App"
              xmlns:local="using:KnowledgeWeakness.App"
-             RequestedThemeVariant="Default">
-             <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
+             xmlns:conv="using:KnowledgeWeakness.App.Converters"
+             RequestedThemeVariant="Light">
 
     <Application.DataTemplates>
         <local:ViewLocator/>
     </Application.DataTemplates>
+
+    <Application.Resources>
+        <SolidColorBrush x:Key="AppBackgroundBrush" Color="#F4F7FB"/>
+        <SolidColorBrush x:Key="PanelBrush" Color="#FFFFFF"/>
+        <SolidColorBrush x:Key="SubtlePanelBrush" Color="#F8FAFC"/>
+        <SolidColorBrush x:Key="PrimaryBrush" Color="#2563EB"/>
+        <SolidColorBrush x:Key="PrimaryHoverBrush" Color="#1D4ED8"/>
+        <SolidColorBrush x:Key="TextBrush" Color="#111827"/>
+        <SolidColorBrush x:Key="MutedTextBrush" Color="#64748B"/>
+        <SolidColorBrush x:Key="BorderBrushSoft" Color="#E2E8F0"/>
+        <SolidColorBrush x:Key="DangerBrush" Color="#DC2626"/>
+        <SolidColorBrush x:Key="DataGridHeaderBrush" Color="#F1F5F9"/>
+        <SolidColorBrush x:Key="DataGridRowHoverBrush" Color="#F8FAFC"/>
+        <conv:StringEqualsConverter x:Key="StringEqualsConverter"/>
+    </Application.Resources>
   
     <Application.Styles>
         <FluentTheme />
         <StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml"/>
+
+        <Style Selector="Window">
+            <Setter Property="FontFamily" Value="Inter, Microsoft YaHei UI, Segoe UI"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
+            <Setter Property="Background" Value="{StaticResource AppBackgroundBrush}"/>
+        </Style>
+
+        <Style Selector="TextBlock.section-title">
+            <Setter Property="FontSize" Value="18"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
+        </Style>
+
+        <Style Selector="TextBlock.field-label">
+            <Setter Property="Foreground" Value="{StaticResource MutedTextBrush}"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+
+        <Style Selector="Button">
+            <Setter Property="Padding" Value="14,8"/>
+            <Setter Property="MinHeight" Value="36"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
+
+        <Style Selector="Button.accent">
+            <Setter Property="Background" Value="{StaticResource PrimaryBrush}"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderBrush" Value="{StaticResource PrimaryBrush}"/>
+        </Style>
+
+        <Style Selector="Button.danger">
+            <Setter Property="Foreground" Value="{StaticResource DangerBrush}"/>
+        </Style>
+
+        <Style Selector="TextBox">
+            <Setter Property="MinHeight" Value="36"/>
+            <Setter Property="CornerRadius" Value="6"/>
+        </Style>
+
+        <Style Selector="ComboBox">
+            <Setter Property="MinHeight" Value="36"/>
+            <Setter Property="CornerRadius" Value="6"/>
+        </Style>
+
+        <Style Selector="CalendarDatePicker">
+            <Setter Property="MinHeight" Value="36"/>
+            <Setter Property="CornerRadius" Value="6"/>
+        </Style>
+
+        <Style Selector="ComboBox">
+            <Setter Property="MinWidth" Value="160"/>
+        </Style>
+
+        <Style Selector="CalendarDatePicker">
+            <Setter Property="MinWidth" Value="150"/>
+        </Style>
+
+        <Style Selector="DataGrid">
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="RowHeight" Value="38"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="GridLinesVisibility" Value="Horizontal"/>
+            <Setter Property="HorizontalGridLinesBrush" Value="#EEF2F7"/>
+            <Setter Property="VerticalGridLinesBrush" Value="#EEF2F7"/>
+            <Setter Property="ClipToBounds" Value="True"/>
+        </Style>
+
+        <Style Selector="DataGridColumnHeader">
+            <Setter Property="Background" Value="{StaticResource DataGridHeaderBrush}"/>
+            <Setter Property="Foreground" Value="#475569"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Height" Value="36"/>
+            <Setter Property="Padding" Value="10,0"/>
+            <Setter Property="SeparatorBrush" Value="#E2E8F0"/>
+        </Style>
+
+        <Style Selector="DataGridRow:pointerover /template/ Rectangle#BackgroundRectangle">
+            <Setter Property="Fill" Value="{StaticResource DataGridRowHoverBrush}"/>
+            <Setter Property="Opacity" Value="1"/>
+        </Style>
+
+        <!-- Reusable "card" panel — keeps every page's frame consistent -->
+        <Style Selector="Border.card">
+            <Setter Property="Background" Value="{StaticResource PanelBrush}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderBrushSoft}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="BoxShadow" Value="0 1 2 0 #0F1F2937"/>
+        </Style>
+
+        <Style Selector="Border.card-flush">
+            <Setter Property="Background" Value="{StaticResource PanelBrush}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderBrushSoft}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="ClipToBounds" Value="True"/>
+            <Setter Property="BoxShadow" Value="0 1 2 0 #0F1F2937"/>
+        </Style>
+
+        <Style Selector="Border.summary-pill">
+            <Setter Property="Background" Value="{StaticResource SubtlePanelBrush}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderBrushSoft}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="14,10"/>
+        </Style>
+
+        <Style Selector="Border.status-bar">
+            <Setter Property="Background" Value="{StaticResource PanelBrush}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderBrushSoft}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="14,8"/>
+            <Setter Property="MinHeight" Value="34"/>
+        </Style>
+
+        <Style Selector="TextBlock.status-text">
+            <Setter Property="Foreground" Value="{StaticResource MutedTextBrush}"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="TextWrapping" Value="NoWrap"/>
+            <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+        </Style>
+
+        <!-- Sidebar navigation buttons: clear hover / pressed / active feedback -->
+        <Style Selector="Button.nav-button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#CBD5E1"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
+            <Setter Property="Padding" Value="16,10"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="FontWeight" Value="Normal"/>
+            <Setter Property="Transitions">
+                <Setter.Value>
+                    <Transitions>
+                        <BrushTransition Property="Background" Duration="0:0:0.12"/>
+                        <BrushTransition Property="Foreground" Duration="0:0:0.12"/>
+                    </Transitions>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style Selector="Button.nav-button /template/ ContentPresenter">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="CornerRadius" Value="8"/>
+        </Style>
+
+        <Style Selector="Button.nav-button:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#1E293B"/>
+            <Setter Property="TextElement.Foreground" Value="White"/>
+        </Style>
+
+        <Style Selector="Button.nav-button:pressed /template/ ContentPresenter">
+            <Setter Property="Background" Value="#0B1220"/>
+            <Setter Property="TextElement.Foreground" Value="White"/>
+        </Style>
+
+        <Style Selector="Button.nav-button.active">
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
+
+        <Style Selector="Button.nav-button.active /template/ ContentPresenter">
+            <Setter Property="Background" Value="#2563EB"/>
+            <Setter Property="TextElement.Foreground" Value="White"/>
+            <Setter Property="BoxShadow" Value="0 6 16 0 #66000000"/>
+        </Style>
+
+        <Style Selector="Button.nav-button.active:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#1D4ED8"/>
+        </Style>
     </Application.Styles>
 </Application>

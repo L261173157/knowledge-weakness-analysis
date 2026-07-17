@@ -1,73 +1,67 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:KnowledgeWeakness.App.ViewModels"
-             xmlns:domain="using:KnowledgeWeakness.Core.Domain"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="600"
+             mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="640"
              x:Class="KnowledgeWeakness.App.Views.StudentsView"
              x:DataType="vm:StudentsViewModel">
 
-    <Grid RowDefinitions="Auto,*,Auto" ColumnDefinitions="*,320">
-
-        <!-- 顶部：新增表单 -->
-        <Border Grid.Row="0" Grid.ColumnSpan="2" Background="White"
-                CornerRadius="8" Padding="16" Margin="0,0,0,12"
-                BorderBrush="#E5E7EB" BorderThickness="1">
-            <StackPanel Orientation="Horizontal" Spacing="8">
-                <TextBlock Text="姓名" VerticalAlignment="Center"/>
-                <TextBox Text="{Binding NewName}" Width="160" PlaceholderText="如：张三"/>
-                <TextBlock Text="年级" VerticalAlignment="Center"/>
-                <TextBox Text="{Binding NewGrade}" Width="100" PlaceholderText="如：初二"/>
-                <Button Content="新增" Command="{Binding AddCommand}" Classes="accent"/>
-                <Button Content="刷新" Command="{Binding LoadCommand}"/>
-            </StackPanel>
+    <Grid RowDefinitions="Auto,*,Auto" ColumnDefinitions="*,340" RowSpacing="16" ColumnSpacing="16">
+        <Border Grid.Row="0" Grid.ColumnSpan="2" Classes="card" Padding="18">
+            <Grid ColumnDefinitions="Auto,180,Auto,140,*,Auto,Auto" ColumnSpacing="10">
+                <TextBlock Grid.Column="0" Classes="field-label" Text="姓名"/>
+                <TextBox Grid.Column="1" Text="{Binding NewName}" PlaceholderText="例如：张三"/>
+                <TextBlock Grid.Column="2" Classes="field-label" Text="年级"/>
+                <TextBox Grid.Column="3" Text="{Binding NewGrade}" PlaceholderText="例如：初二"/>
+                <Button Grid.Column="5" Content="新增学生" Command="{Binding AddCommand}" Classes="accent"/>
+                <Button Grid.Column="6" Content="刷新" Command="{Binding LoadCommand}"/>
+            </Grid>
         </Border>
 
-        <!-- 左侧：学生列表 -->
-        <Border Grid.Row="1" Grid.Column="0" Background="White"
-                CornerRadius="8" BorderBrush="#E5E7EB" BorderThickness="1"
-                Margin="0,0,12,0">
+        <Border Grid.Row="1" Grid.Column="0" Classes="card-flush">
             <DataGrid ItemsSource="{Binding Students}"
                       SelectedItem="{Binding Selected}"
                       IsReadOnly="True"
-                      GridLinesVisibility="Horizontal"
-                      HeadersVisibility="Column">
+                      HeadersVisibility="Column"
+                      CanUserResizeColumns="True">
                 <DataGrid.Columns>
-                    <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="60"/>
-                    <DataGridTextColumn Header="姓名" Binding="{Binding Name}" Width="160"/>
-                    <DataGridTextColumn Header="年级" Binding="{Binding Grade}" Width="120"/>
-                    <DataGridTextColumn Header="创建时间" Binding="{Binding CreatedAt, StringFormat=yyyy-MM-dd HH:mm}" Width="160"/>
+                    <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="70"/>
+                    <DataGridTextColumn Header="姓名" Binding="{Binding Name}" Width="180"/>
+                    <DataGridTextColumn Header="年级" Binding="{Binding Grade}" Width="140"/>
+                    <DataGridTextColumn Header="创建时间" Binding="{Binding CreatedAt, StringFormat=yyyy-MM-dd HH:mm}" Width="*"/>
                 </DataGrid.Columns>
             </DataGrid>
         </Border>
 
-        <!-- 右侧：详情编辑 -->
-        <Border Grid.Row="1" Grid.Column="1" Background="White"
-                CornerRadius="8" Padding="16"
-                BorderBrush="#E5E7EB" BorderThickness="1">
-            <StackPanel Spacing="12">
-                <TextBlock Text="详情" FontWeight="SemiBold" FontSize="14"/>
-                <StackPanel IsVisible="{Binding Selected, Converter={x:Static ObjectConverters.IsNotNull}}" Spacing="8">
-                    <TextBlock Text="ID"/>
-                    <TextBlock Text="{Binding Selected.Id}" FontWeight="Bold"/>
-                    <TextBlock Text="姓名"/>
+        <Border Grid.Row="1" Grid.Column="1" Classes="card" Padding="18">
+            <StackPanel Spacing="14">
+                <TextBlock Text="学生详情" Classes="section-title"/>
+                <StackPanel IsVisible="{Binding Selected, Converter={x:Static ObjectConverters.IsNotNull}}" Spacing="10">
+                    <TextBlock Classes="field-label" Text="ID"/>
+                    <TextBlock Text="{Binding Selected.Id}" FontWeight="Bold" FontSize="16"/>
+                    <TextBlock Classes="field-label" Text="姓名"/>
                     <TextBox Text="{Binding Selected.Name}"/>
-                    <TextBlock Text="年级"/>
+                    <TextBlock Classes="field-label" Text="年级"/>
                     <TextBox Text="{Binding Selected.Grade}"/>
-                    <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,12,0,0">
-                        <Button Content="保存" Command="{Binding SaveCommand}" Classes="accent"/>
-                        <Button Content="删除" Command="{Binding DeleteCommand}" Foreground="#DC2626"/>
+                    <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,10,0,0">
+                        <Button Content="保存修改" Command="{Binding SaveCommand}" Classes="accent"/>
+                        <Button Content="删除" Command="{Binding DeleteCommand}" Classes="danger"/>
                     </StackPanel>
                 </StackPanel>
-                <TextBlock IsVisible="{Binding Selected, Converter={x:Static ObjectConverters.IsNull}}"
-                           Text="选择左侧记录查看详情" Foreground="#6B7280"/>
+                <Border IsVisible="{Binding Selected, Converter={x:Static ObjectConverters.IsNull}}"
+                        Background="{StaticResource SubtlePanelBrush}"
+                        CornerRadius="8"
+                        Padding="16">
+                    <TextBlock Text="选择左侧学生后，在这里查看和编辑详情。"
+                               Foreground="{StaticResource MutedTextBrush}"
+                               TextWrapping="Wrap"/>
+                </Border>
             </StackPanel>
         </Border>
 
-        <!-- 底部：状态栏 -->
-        <TextBlock Grid.Row="2" Grid.ColumnSpan="2"
-                   Text="{Binding Status}" Margin="0,12,0,0"
-                   Foreground="#6B7280" FontSize="12"/>
+        <Border Grid.Row="2" Grid.ColumnSpan="2" Classes="status-bar">
+            <TextBlock Text="{Binding Status}" Classes="status-text"/>
+        </Border>
     </Grid>
 </UserControl>

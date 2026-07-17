@@ -23,6 +23,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Core\KnowledgeWeakness.Core.csproj" />
     <ProjectReference Include="..\..\src\Infrastructure\KnowledgeWeakness.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\App\KnowledgeWeakness.App.csproj" />
   </ItemGroup>
 
 </Project>

@@ -2,6 +2,7 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
 using KnowledgeWeakness.Core.AI;
+using KnowledgeWeakness.Core.Abstractions;
 using KnowledgeWeakness.Core.Analysis;
 using Microsoft.Extensions.Logging;
 
@@ -9,15 +10,26 @@ namespace KnowledgeWeakness.Infrastructure.AI;
 
 public class GlmWeaknessAnalyzer(
     HttpClient httpClient,
-    GlmVisionOptions options,
+    ISettingsRepository settings,
     ILogger<GlmWeaknessAnalyzer> logger) : IWeaknessAnalyzer
 {
     public async Task<AiWeaknessAnalysisResult> AnalyzeAsync(
         AiWeaknessAnalysisRequest request,
         CancellationToken ct = default)
     {
+        var options = new GlmVisionOptions
+        {
+            ApiKey = await settings.GetSecretAsync(SettingsKeys.LanguageGlmApiKey, ct)
+                     ?? await settings.GetSecretAsync(SettingsKeys.GlmApiKey, ct),
+            Model = await settings.GetAsync(SettingsKeys.LanguageGlmModel, ct)
+                    ?? await settings.GetAsync(SettingsKeys.GlmModel, ct)
+                    ?? "glm-4.6",
+            BaseUrl = await settings.GetAsync(SettingsKeys.LanguageGlmBaseUrl, ct)
+                      ?? "https://open.bigmodel.cn/api/paas/v4"
+        };
+
         if (string.IsNullOrWhiteSpace(options.ApiKey))
-            throw new InvalidOperationException("GLM API Key 未配置，请在设置页填写。");
+            throw new InvalidOperationException("语言模型 GLM API Key 未配置，请在设置页填写。");
 
         if (request.Candidates.Count == 0)
             return new AiWeaknessAnalysisResult("没有可分析的薄弱题。", [], "{}");
@@ -49,7 +61,12 @@ public class GlmWeaknessAnalyzer(
             throw new HttpRequestException($"GLM 薄弱分析调用失败 ({(int)resp.StatusCode}): {respText}");
         }
 
-        var messageContent = ExtractAssistantContent(respText);
+        var messageContent = GlmResponseHelper.ExtractAssistantContent(respText);
+        if (string.IsNullOrEmpty(messageContent))
+        {
+            throw new InvalidOperationException(
+                "GLM 语言模型未返回内容（可能是限流或内容审核拒绝），请稍后重试。");
+        }
         try
         {
             return AiWeaknessJsonParser.Parse(messageContent);
@@ -59,14 +76,5 @@ public class GlmWeaknessAnalyzer(
             logger.LogError(ex, "Failed to parse GLM weakness JSON: {Content}", messageContent);
             throw new InvalidOperationException("模型返回非法薄弱分析 JSON，请重试。", ex);
         }
-    }
-
-    private static string ExtractAssistantContent(string respJson)
-    {
-        using var doc = JsonDocument.Parse(respJson);
-        var choices = doc.RootElement.GetProperty("choices");
-        var first = choices[0];
-        var msg = first.GetProperty("message");
-        return msg.GetProperty("content").GetString() ?? "";
     }
 }

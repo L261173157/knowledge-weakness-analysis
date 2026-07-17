@@ -1,0 +1,79 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:KnowledgeWeakness.App.ViewModels"
+             xmlns:domain="using:KnowledgeWeakness.Core.Domain"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="640"
+             x:Class="KnowledgeWeakness.App.Views.KnowledgePointsView"
+             x:DataType="vm:KnowledgePointsViewModel">
+
+    <Grid RowDefinitions="Auto,*,Auto" ColumnDefinitions="*,360" RowSpacing="16" ColumnSpacing="16">
+        <Border Grid.Row="0" Grid.ColumnSpan="2" Classes="card" Padding="18">
+            <Grid ColumnDefinitions="Auto,180,Auto,*,Auto,2*,Auto,Auto" ColumnSpacing="10">
+                <TextBlock Grid.Column="0" Classes="field-label" Text="学科"/>
+                <ComboBox Grid.Column="1"
+                          ItemsSource="{Binding Subjects}"
+                          SelectedItem="{Binding SelectedSubject}"
+                          HorizontalAlignment="Stretch">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate DataType="domain:Subject">
+                            <TextBlock Text="{Binding Name}"/>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+                <TextBlock Grid.Column="2" Classes="field-label" Text="知识点"/>
+                <TextBox Grid.Column="3" Text="{Binding NewName}" PlaceholderText="例如：气候与降水"/>
+                <TextBlock Grid.Column="4" Classes="field-label" Text="关键词"/>
+                <TextBox Grid.Column="5" Text="{Binding NewKeywords}" PlaceholderText="空格 / 逗号 / | 分隔，如：气候 降水 季风"/>
+                <Button Grid.Column="6" Content="新增" Command="{Binding AddCommand}" Classes="accent"/>
+                <Button Grid.Column="7" Content="刷新" Command="{Binding LoadCommand}"/>
+            </Grid>
+        </Border>
+
+        <Border Grid.Row="1" Grid.Column="0" Classes="card-flush">
+            <DataGrid ItemsSource="{Binding Points}"
+                      SelectedItem="{Binding Selected}"
+                      IsReadOnly="True"
+                      HeadersVisibility="Column"
+                      CanUserResizeColumns="True">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="60"/>
+                    <DataGridTextColumn Header="知识点" Binding="{Binding Name}" Width="180"/>
+                    <DataGridTextColumn Header="关键词" Binding="{Binding Keywords}" Width="2*"/>
+                    <DataGridTextColumn Header="描述" Binding="{Binding Description}" Width="*"/>
+                </DataGrid.Columns>
+            </DataGrid>
+        </Border>
+
+        <Border Grid.Row="1" Grid.Column="1" Classes="card" Padding="18">
+            <StackPanel Spacing="12">
+                <TextBlock Text="知识点详情" Classes="section-title"/>
+                <StackPanel IsVisible="{Binding Selected, Converter={x:Static ObjectConverters.IsNotNull}}" Spacing="8">
+                    <TextBlock Classes="field-label" Text="名称"/>
+                    <TextBox Text="{Binding Selected.Name}"/>
+                    <TextBlock Classes="field-label" Text="关键词（空格/逗号/|分隔）"/>
+                    <TextBox Text="{Binding Selected.Keywords}" AcceptsReturn="True" MinHeight="60" TextWrapping="Wrap"/>
+                    <TextBlock Classes="field-label" Text="描述（可选）"/>
+                    <TextBox Text="{Binding Selected.Description}" AcceptsReturn="True" MinHeight="60" TextWrapping="Wrap"/>
+                    <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,8,0,0">
+                        <Button Content="保存修改" Command="{Binding SaveCommand}" Classes="accent"/>
+                        <Button Content="删除" Command="{Binding DeleteCommand}" Classes="danger"/>
+                    </StackPanel>
+                </StackPanel>
+                <Border IsVisible="{Binding Selected, Converter={x:Static ObjectConverters.IsNull}}"
+                        Background="{StaticResource SubtlePanelBrush}"
+                        CornerRadius="8"
+                        Padding="16">
+                    <TextBlock Text="选择左侧条目编辑。未配置知识点时，薄弱分析回退到内置地理规则。"
+                               Foreground="{StaticResource MutedTextBrush}"
+                               TextWrapping="Wrap"/>
+                </Border>
+            </StackPanel>
+        </Border>
+
+        <Border Grid.Row="2" Grid.ColumnSpan="2" Classes="status-bar">
+            <TextBlock Text="{Binding Status}" Classes="status-text"/>
+        </Border>
+    </Grid>
+</UserControl>

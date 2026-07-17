@@ -4,22 +4,19 @@
              xmlns:domain="using:KnowledgeWeakness.Core.Domain"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="680"
+             mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="700"
              x:Class="KnowledgeWeakness.App.Views.PaperImportView"
              x:DataType="vm:PaperImportViewModel">
 
-    <Grid RowDefinitions="Auto,*,Auto">
-
-        <Border Grid.Row="0" Background="White"
-                CornerRadius="8" Padding="16" Margin="0,0,0,12"
-                BorderBrush="#E5E7EB" BorderThickness="1">
-            <StackPanel Spacing="8">
-                <Grid ColumnDefinitions="Auto,*,Auto,*" RowDefinitions="Auto,Auto">
-                    <TextBlock Grid.Row="0" Grid.Column="0" Text="学生" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                    <ComboBox Grid.Row="0" Grid.Column="1"
+    <Grid RowDefinitions="Auto,*" RowSpacing="16">
+        <Border Grid.Row="0" Classes="card" Padding="18">
+            <StackPanel Spacing="14">
+                <Grid ColumnDefinitions="Auto,200,Auto,200,Auto,*,Auto,170" ColumnSpacing="10">
+                    <TextBlock Grid.Column="0" Classes="field-label" Text="学生"/>
+                    <ComboBox Grid.Column="1"
                               ItemsSource="{Binding Students}"
                               SelectedItem="{Binding SelectedStudent}"
-                              HorizontalAlignment="Stretch" Margin="0,4,12,4">
+                              HorizontalAlignment="Stretch">
                         <ComboBox.ItemTemplate>
                             <DataTemplate DataType="domain:Student">
                                 <TextBlock Text="{Binding Name}"/>
@@ -27,11 +24,11 @@
                         </ComboBox.ItemTemplate>
                     </ComboBox>
 
-                    <TextBlock Grid.Row="0" Grid.Column="2" Text="学科" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                    <ComboBox Grid.Row="0" Grid.Column="3"
+                    <TextBlock Grid.Column="2" Classes="field-label" Text="学科"/>
+                    <ComboBox Grid.Column="3"
                               ItemsSource="{Binding Subjects}"
                               SelectedItem="{Binding SelectedSubject}"
-                              HorizontalAlignment="Stretch" Margin="0,4,0,4">
+                              HorizontalAlignment="Stretch">
                         <ComboBox.ItemTemplate>
                             <DataTemplate DataType="domain:Subject">
                                 <TextBlock Text="{Binding Name}"/>
@@ -39,84 +36,140 @@
                         </ComboBox.ItemTemplate>
                     </ComboBox>
 
-                    <TextBlock Grid.Row="1" Grid.Column="0" Text="卷名" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                    <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding Title}" Margin="0,4,12,0"
-                             PlaceholderText="如：第二单元测验"/>
-                    <TextBlock Grid.Row="1" Grid.Column="2" Text="日期" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                    <CalendarDatePicker Grid.Row="1" Grid.Column="3"
-                                        SelectedDate="{Binding PaperDate}" Margin="0,4,0,0"
+                    <TextBlock Grid.Column="4" Classes="field-label" Text="卷名"/>
+                    <TextBox Grid.Column="5"
+                             Text="{Binding Title}"
+                             PlaceholderText="例如：第二单元测试"/>
+                    <TextBlock Grid.Column="6" Classes="field-label" Text="日期"/>
+                    <CalendarDatePicker Grid.Column="7"
+                                        SelectedDate="{Binding PaperDate}"
                                         HorizontalAlignment="Stretch"/>
                 </Grid>
 
-                <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,4,0,0">
+                <WrapPanel ItemSpacing="8" LineSpacing="8">
                     <Button Content="选择图片" Command="{Binding PickImagesCommand}"/>
-                    <Button Content="清空" Command="{Binding ClearImagesCommand}"/>
-                    <Button Content="识别" Command="{Binding ExtractCommand}" Classes="accent"
+                    <Button Content="清空图片" Command="{Binding ClearImagesCommand}"/>
+                    <Button Content="识别题目" Command="{Binding ExtractCommand}" Classes="accent"
                             IsEnabled="{Binding !IsBusy}"/>
                     <Button Content="保存入库" Command="{Binding SaveCommand}"
-                            IsEnabled="{Binding !IsBusy}"/>
-                </StackPanel>
-                <CheckBox Content="我已完成逐题校对，确认这份卷子可进入薄弱分析"
-                          IsChecked="{Binding IsReviewConfirmed}"
-                          Margin="0,2,0,0"/>
-                <TextBox Text="{Binding Status}" IsReadOnly="True"
-                         TextWrapping="Wrap" AcceptsReturn="True"
-                         MaxHeight="120" Foreground="#374151" FontSize="12"
-                         Background="#F9FAFB" BorderBrush="#E5E7EB"/>
+                            IsEnabled="{Binding CanSave}"
+                            ToolTip.Tip="保存成功后此按钮会禁用，避免重复入库；识别过程中也禁用，防止串入旧数据。"/>
+                    <Button Content="新建下一卷" Command="{Binding NewPaperCommand}"/>
+                    <CheckBox Content="保存后自动清空（批量录入）" IsChecked="{Binding AutoResetAfterSave}"
+                              VerticalAlignment="Center" Margin="8,0,0,0"/>
+                </WrapPanel>
 
-                <ItemsControl ItemsSource="{Binding Images}" Margin="0,8,0,0">
-                    <ItemsControl.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <WrapPanel/>
-                        </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <Border Background="#F3F4F6" CornerRadius="4"
-                                    Padding="8,4" Margin="0,0,6,6">
-                                <TextBlock Text="{Binding DisplayName}" FontSize="12"/>
-                            </Border>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
+                <CheckBox Content="我已完成逐题校对，确认这份卷子可进入薄弱分析"
+                          IsChecked="{Binding IsReviewConfirmed}"/>
+
+                <Grid ColumnDefinitions="2*,3*" ColumnSpacing="14">
+                    <TextBox Grid.Column="0"
+                             Text="{Binding Status}"
+                             IsReadOnly="True"
+                             TextWrapping="Wrap"
+                             AcceptsReturn="True"
+                             MinHeight="56"
+                             MaxHeight="86"
+                             Foreground="#374151"
+                             FontSize="12"
+                             Background="{StaticResource SubtlePanelBrush}"
+                             BorderBrush="{StaticResource BorderBrushSoft}"/>
+
+                    <Border Grid.Column="1"
+                            Background="{StaticResource SubtlePanelBrush}"
+                            BorderBrush="{StaticResource BorderBrushSoft}"
+                            BorderThickness="1"
+                            CornerRadius="8"
+                            Padding="10"
+                            MinHeight="56"
+                            MaxHeight="86">
+                        <ScrollViewer HorizontalScrollBarVisibility="Disabled"
+                                      VerticalScrollBarVisibility="Auto">
+                            <ItemsControl ItemsSource="{Binding Images}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Background="#E2E8F0"
+                                                CornerRadius="6"
+                                                Padding="8,4"
+                                                Margin="0,0,6,6">
+                                            <TextBlock Text="{Binding DisplayName}" FontSize="12"/>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </Border>
+                </Grid>
             </StackPanel>
         </Border>
 
-        <Border Grid.Row="1" Background="White"
-                CornerRadius="8" BorderBrush="#E5E7EB" BorderThickness="1">
-            <DataGrid ItemsSource="{Binding Questions}"
-                      GridLinesVisibility="All"
-                      CanUserResizeColumns="True"
-                      HeadersVisibility="Column">
-                <DataGrid.Columns>
-                    <DataGridTextColumn Header="题号" Binding="{Binding Number}" Width="70"/>
-                    <DataGridTemplateColumn Header="题型" Width="110">
-                        <DataGridTemplateColumn.CellTemplate>
-                            <DataTemplate DataType="vm:ExtractedQuestionRow">
-                                <TextBlock Text="{Binding Type}" VerticalAlignment="Center" Margin="6,0"/>
-                            </DataTemplate>
-                        </DataGridTemplateColumn.CellTemplate>
-                        <DataGridTemplateColumn.CellEditingTemplate>
-                            <DataTemplate DataType="vm:ExtractedQuestionRow">
-                                <ComboBox ItemsSource="{Binding $parent[UserControl].((vm:PaperImportViewModel)DataContext).QuestionTypes}"
-                                          SelectedItem="{Binding Type}"/>
-                            </DataTemplate>
-                        </DataGridTemplateColumn.CellEditingTemplate>
-                    </DataGridTemplateColumn>
-                    <DataGridTextColumn Header="题干" Binding="{Binding Stem}" Width="2*"/>
-                    <DataGridTextColumn Header="标准答案" Binding="{Binding StandardAnswer}" Width="*"/>
-                    <DataGridTextColumn Header="学生答案" Binding="{Binding StudentAnswer}" Width="*"/>
-                    <DataGridCheckBoxColumn Header="正确" Binding="{Binding IsCorrect}" Width="60"/>
-                    <DataGridTextColumn Header="得分" Binding="{Binding PartialScore}" Width="70"/>
-                    <DataGridTextColumn Header="批注" Binding="{Binding TeacherComment}" Width="*"/>
-                </DataGrid.Columns>
-            </DataGrid>
-        </Border>
+        <TabControl Grid.Row="1">
+            <TabItem Header="题目校对">
+                <Border Classes="card-flush">
+                    <DataGrid ItemsSource="{Binding Questions}"
+                              CanUserResizeColumns="True"
+                              HeadersVisibility="Column"
+                              HorizontalScrollBarVisibility="Auto"
+                              VerticalScrollBarVisibility="Auto">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="题号" Binding="{Binding Number}" Width="70" MinWidth="70"/>
+                            <DataGridTemplateColumn Header="题型" Width="110" MinWidth="100">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate DataType="vm:ExtractedQuestionRow">
+                                        <TextBlock Text="{Binding Type}" VerticalAlignment="Center" Margin="6,0"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                                <DataGridTemplateColumn.CellEditingTemplate>
+                                    <DataTemplate DataType="vm:ExtractedQuestionRow">
+                                        <ComboBox ItemsSource="{Binding $parent[UserControl].((vm:PaperImportViewModel)DataContext).QuestionTypes}"
+                                                  SelectedItem="{Binding Type}"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellEditingTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTextColumn Header="题干" Binding="{Binding Stem}" Width="340" MinWidth="240"/>
+                            <DataGridTextColumn Header="正确选项" Binding="{Binding StandardAnswerOption}" Width="90" MinWidth="80"/>
+                            <DataGridTextColumn Header="正确答案文字" Binding="{Binding StandardAnswerText}" Width="220" MinWidth="160"/>
+                            <DataGridTextColumn Header="学生选项" Binding="{Binding StudentAnswerOption}" Width="90" MinWidth="80"/>
+                            <DataGridTextColumn Header="学生答案文字" Binding="{Binding StudentAnswerText}" Width="220" MinWidth="160"/>
+                            <DataGridTextColumn Header="老师判定" Binding="{Binding TeacherJudgmentText}" Width="90" MinWidth="80"/>
+                            <DataGridTextColumn Header="AI判定" Binding="{Binding AiJudgmentText}" Width="82" MinWidth="72"/>
+                            <DataGridTextColumn Header="答案判定" Binding="{Binding AnswerTextJudgmentText}" Width="90" MinWidth="80"/>
+                            <DataGridTemplateColumn Header="复核" Width="120" MinWidth="110">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate DataType="vm:ExtractedQuestionRow">
+                                        <Button Content="{Binding ReviewActionText}"
+                                                Command="{Binding AcceptCurrentJudgmentCommand}"
+                                                IsEnabled="{Binding NeedsReview}"
+                                                Padding="6,2"
+                                                Margin="2"
+                                                ToolTip.Tip="点击此处确认接受当前判定（不必再切换正确列）"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridCheckBoxColumn Header="正确" Binding="{Binding IsCorrect}" Width="66" MinWidth="60"/>
+                            <DataGridTextColumn Header="得分" Binding="{Binding PartialScore}" Width="70" MinWidth="64"/>
+                            <DataGridTextColumn Header="批注" Binding="{Binding TeacherComment}" Width="240" MinWidth="160"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Border>
+            </TabItem>
 
-        <Expander Grid.Row="2" Header="原始 JSON（调试）" Margin="0,12,0,0">
-            <TextBox Text="{Binding RawJson}" IsReadOnly="True"
-                     AcceptsReturn="True" TextWrapping="Wrap" FontFamily="Consolas"
-                     MaxHeight="180"/>
-        </Expander>
+            <TabItem Header="原始 JSON">
+                <Border Classes="card" Padding="12">
+                    <TextBox Text="{Binding RawJson}"
+                             IsReadOnly="True"
+                             AcceptsReturn="True"
+                             TextWrapping="NoWrap"
+                             ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                             ScrollViewer.VerticalScrollBarVisibility="Auto"
+                             FontFamily="Consolas"/>
+                </Border>
+            </TabItem>
+        </TabControl>
     </Grid>
 </UserControl>

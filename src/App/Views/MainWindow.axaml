@@ -3,69 +3,105 @@
         xmlns:vm="using:KnowledgeWeakness.App.ViewModels"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="720"
+        mc:Ignorable="d" d:DesignWidth="1280" d:DesignHeight="800"
         x:Class="KnowledgeWeakness.App.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Title="知识薄弱分析"
-        Width="1200" Height="720"
-        MinWidth="960" MinHeight="600">
+        Icon="/Assets/app-icon.ico"
+        Width="1280" Height="800"
+        MinWidth="960" MinHeight="600"
+        WindowState="Maximized">
 
-    <Grid ColumnDefinitions="220,*">
-        <Border Grid.Column="0" Background="#1F2937">
-            <StackPanel Margin="0,16">
-                <TextBlock Text="知识薄弱分析"
-                           Foreground="White" FontSize="18" FontWeight="Bold"
-                           Margin="16,0,0,16"/>
+    <Grid ColumnDefinitions="248,*" Background="{StaticResource AppBackgroundBrush}">
+        <Border Grid.Column="0" Background="#0F172A">
+            <Grid RowDefinitions="Auto,*,Auto" Margin="20,22">
+                <StackPanel Grid.Row="0" Spacing="4" Margin="0,0,0,26">
+                    <TextBlock Text="知识薄弱分析"
+                               Foreground="White"
+                               FontSize="22"
+                               FontWeight="Bold"/>
+                    <TextBlock Text="试卷导入 · 错题归因 · 复习建议"
+                               Foreground="#94A3B8"
+                               FontSize="12"/>
+                </StackPanel>
 
-                <Button Content="学生"
-                        Command="{Binding GoToStudentsCommand}"
-                        HorizontalContentAlignment="Left"
-                        HorizontalAlignment="Stretch"
-                        Padding="16,10"
-                        Background="Transparent"
-                        Foreground="White"
-                        BorderThickness="0"/>
-                <Button Content="学科"
-                        Command="{Binding GoToSubjectsCommand}"
-                        HorizontalContentAlignment="Left"
-                        HorizontalAlignment="Stretch"
-                        Padding="16,10"
-                        Background="Transparent"
-                        Foreground="White"
-                        BorderThickness="0"/>
-                <Button Content="卷子导入"
-                        Command="{Binding GoToImportCommand}"
-                        HorizontalContentAlignment="Left"
-                        HorizontalAlignment="Stretch"
-                        Padding="16,10"
-                        Background="Transparent"
-                        Foreground="White"
-                        BorderThickness="0"/>
-                <Button Content="薄弱分析"
-                        Command="{Binding GoToAnalysisCommand}"
-                        HorizontalContentAlignment="Left"
-                        HorizontalAlignment="Stretch"
-                        Padding="16,10"
-                        Background="Transparent"
-                        Foreground="White"
-                        BorderThickness="0"/>
-                <Button Content="设置"
-                        Command="{Binding GoToSettingsCommand}"
-                        HorizontalContentAlignment="Left"
-                        HorizontalAlignment="Stretch"
-                        Padding="16,10"
-                        Background="Transparent"
-                        Foreground="White"
-                        BorderThickness="0"/>
-            </StackPanel>
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                    <StackPanel Spacing="6">
+                        <Button Content="学生管理"
+                                Classes="nav-button"
+                                Classes.active="{Binding CurrentPageKey, Converter={StaticResource StringEqualsConverter}, ConverterParameter=students}"
+                                Command="{Binding GoToStudentsCommand}"/>
+                        <Button Content="学科管理"
+                                Classes="nav-button"
+                                Classes.active="{Binding CurrentPageKey, Converter={StaticResource StringEqualsConverter}, ConverterParameter=subjects}"
+                                Command="{Binding GoToSubjectsCommand}"/>
+                        <Button Content="知识点管理"
+                                Classes="nav-button"
+                                Classes.active="{Binding CurrentPageKey, Converter={StaticResource StringEqualsConverter}, ConverterParameter=knowledge-points}"
+                                Command="{Binding GoToKnowledgePointsCommand}"/>
+                        <Separator Margin="0,4" Background="#1E293B"/>
+                        <Button Content="卷子导入"
+                                Classes="nav-button"
+                                Classes.active="{Binding CurrentPageKey, Converter={StaticResource StringEqualsConverter}, ConverterParameter=import}"
+                                Command="{Binding GoToImportCommand}"/>
+                        <Button Content="历史卷子"
+                                Classes="nav-button"
+                                Classes.active="{Binding CurrentPageKey, Converter={StaticResource StringEqualsConverter}, ConverterParameter=papers}"
+                                Command="{Binding GoToPapersCommand}"/>
+                        <Button Content="错题本"
+                                Classes="nav-button"
+                                Classes.active="{Binding CurrentPageKey, Converter={StaticResource StringEqualsConverter}, ConverterParameter=mistakes}"
+                                Command="{Binding GoToMistakesCommand}"/>
+                        <Separator Margin="0,4" Background="#1E293B"/>
+                        <Button Content="薄弱分析"
+                                Classes="nav-button"
+                                Classes.active="{Binding CurrentPageKey, Converter={StaticResource StringEqualsConverter}, ConverterParameter=analysis}"
+                                Command="{Binding GoToAnalysisCommand}"/>
+                        <Button Content="成绩趋势"
+                                Classes="nav-button"
+                                Classes.active="{Binding CurrentPageKey, Converter={StaticResource StringEqualsConverter}, ConverterParameter=trends}"
+                                Command="{Binding GoToTrendsCommand}"/>
+                        <Separator Margin="0,4" Background="#1E293B"/>
+                        <Button Content="系统设置"
+                                Classes="nav-button"
+                                Classes.active="{Binding CurrentPageKey, Converter={StaticResource StringEqualsConverter}, ConverterParameter=settings}"
+                                Command="{Binding GoToSettingsCommand}"/>
+                    </StackPanel>
+                </ScrollViewer>
+
+                <Border Grid.Row="2"
+                        Background="#111827"
+                        BorderBrush="#334155"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        Padding="14">
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="工作流" Foreground="#E2E8F0" FontWeight="SemiBold"/>
+                        <TextBlock Text="先导入试卷并校对，再进入薄弱分析生成复习方向。"
+                                   Foreground="#94A3B8"
+                                   FontSize="12"
+                                   TextWrapping="Wrap"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
         </Border>
 
-        <DockPanel Grid.Column="1" Background="#F8FAFC">
-            <Border DockPanel.Dock="Top" Background="White" Padding="24,14" BorderBrush="#E5E7EB" BorderThickness="0,0,0,1">
-                <TextBlock Text="{Binding CurrentPageTitle}"
-                           FontSize="20" FontWeight="SemiBold"/>
+        <DockPanel Grid.Column="1" Background="{StaticResource AppBackgroundBrush}">
+            <Border DockPanel.Dock="Top"
+                    Background="White"
+                    Padding="28,18"
+                    BorderBrush="{StaticResource BorderBrushSoft}"
+                    BorderThickness="0,0,0,1">
+                <StackPanel Spacing="3">
+                    <TextBlock Text="{Binding CurrentPageTitle}"
+                               FontSize="24"
+                               FontWeight="Bold"/>
+                    <TextBlock Text="{Binding CurrentPageDescription}"
+                               Foreground="{StaticResource MutedTextBrush}"
+                               FontSize="13"/>
+                </StackPanel>
             </Border>
-            <ContentControl Content="{Binding CurrentPage}" Margin="24"/>
+            <ContentControl Content="{Binding CurrentPage}" Margin="28"/>
         </DockPanel>
     </Grid>
 </Window>

@@ -37,10 +37,14 @@ public static class WeaknessAnalysisService
     ];
 
     public static WeaknessAnalysisResult Analyze(IEnumerable<Paper> papers)
+        => Analyze(papers, null);
+
+    public static WeaknessAnalysisResult Analyze(IEnumerable<Paper> papers, IEnumerable<KnowledgePoint>? knowledgePoints)
     {
         var paperList = papers.ToList();
+        var rules = BuildRules(knowledgePoints);
         var questionRows = paperList
-            .SelectMany(p => p.Questions.Select(q => new QuestionRow(p, q, Classify(q))))
+            .SelectMany(p => p.Questions.Select(q => new QuestionRow(p, q, Classify(q, rules))))
             .ToList();
 
         var weakRows = questionRows.Where(x => IsWeak(x.Question)).ToList();
@@ -89,10 +93,10 @@ public static class WeaknessAnalysisService
         return !answer.IsCorrect || answer.PartialScore is not null;
     }
 
-    private static string Classify(Question question)
+    private static string Classify(Question question, IReadOnlyList<KnowledgeRule> rules)
     {
         var text = string.Join(" ", question.Stem, question.StandardAnswer, question.StudentAnswer?.TeacherComment);
-        return Rules
+        return rules
             .Select(rule => new
             {
                 rule.Name,
@@ -102,6 +106,22 @@ public static class WeaknessAnalysisService
             .OrderByDescending(x => x.Score)
             .Select(x => x.Name)
             .FirstOrDefault() ?? "未归类";
+    }
+
+    private static IReadOnlyList<KnowledgeRule> BuildRules(IEnumerable<KnowledgePoint>? knowledgePoints)
+    {
+        if (knowledgePoints is null) return Rules;
+        var custom = knowledgePoints
+            .Where(p => !string.IsNullOrWhiteSpace(p.Name))
+            .Select(p => new KnowledgeRule(
+                p.Name.Trim(),
+                (p.Keywords ?? "")
+                    .Split(new[] { '|', ',', '，', '、', ' ', '\n', '\r', '\t' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                    .Where(s => s.Length > 0)
+                    .ToArray()))
+            .Where(r => r.Keywords.Length > 0)
+            .ToList();
+        return custom.Count == 0 ? Rules : custom;
     }
 
     private sealed record KnowledgeRule(string Name, string[] Keywords);

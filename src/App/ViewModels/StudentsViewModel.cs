@@ -48,6 +48,7 @@ public partial class StudentsViewModel : ViewModelBase
             Status = "姓名不能为空";
             return;
         }
+
         await _repo.AddAsync(new Student { Name = NewName.Trim(), Grade = NewGrade.Trim() });
         NewName = "";
         NewGrade = "";

@@ -3,35 +3,127 @@
              xmlns:vm="using:KnowledgeWeakness.App.ViewModels"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="600"
+             mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="720"
              x:Class="KnowledgeWeakness.App.Views.SettingsView"
              x:DataType="vm:SettingsViewModel">
 
-    <ScrollViewer>
-        <StackPanel Spacing="16" MaxWidth="720" HorizontalAlignment="Left">
+    <Grid RowDefinitions="*,Auto" RowSpacing="16">
+        <ScrollViewer Grid.Row="0">
+            <StackPanel Spacing="16" MaxWidth="920" HorizontalAlignment="Left">
+                <Border Classes="card" Padding="20">
+                    <StackPanel Spacing="12">
+                        <TextBlock Text="图片识别大模型" Classes="section-title"/>
+                        <TextBlock Text="用于卷子图片识别、题目提取和答案识别。"
+                                   Foreground="{StaticResource MutedTextBrush}" FontSize="13"/>
+                        <Grid ColumnDefinitions="150,*" RowDefinitions="Auto,Auto,Auto" RowSpacing="10" ColumnSpacing="12">
+                            <TextBlock Grid.Row="0" Grid.Column="0" Classes="field-label" Text="智谱 API Key"/>
+                            <TextBox Grid.Row="0" Grid.Column="1"
+                                     Text="{Binding VisionGlmApiKey}"
+                                     PasswordChar="*"
+                                     PlaceholderText="从 open.bigmodel.cn 获取"/>
+                            <TextBlock Grid.Row="1" Grid.Column="0" Classes="field-label" Text="模型名称"/>
+                            <TextBox Grid.Row="1" Grid.Column="1"
+                                     Text="{Binding VisionGlmModel}"
+                                     PlaceholderText="glm-4.6v / glm-4.6v-flashx / glm-4.6v-flash"/>
+                            <TextBlock Grid.Row="2" Grid.Column="0" Classes="field-label" Text="接口路径"/>
+                            <TextBox Grid.Row="2" Grid.Column="1"
+                                     Text="{Binding VisionGlmBaseUrl}"
+                                     PlaceholderText="https://open.bigmodel.cn/api/paas/v4"/>
+                        </Grid>
+                    </StackPanel>
+                </Border>
 
-            <Border Background="White" CornerRadius="8" Padding="20"
-                    BorderBrush="#E5E7EB" BorderThickness="1">
-                <StackPanel Spacing="10">
-                    <TextBlock Text="智谱 GLM" FontWeight="SemiBold"/>
-                    <TextBlock Text="API Key"/>
-                    <TextBox Text="{Binding GlmApiKey}" PasswordChar="●"
-                             PlaceholderText="从 open.bigmodel.cn 获取"/>
-                    <TextBlock Text="模型"/>
-                    <TextBox Text="{Binding GlmModel}"
-                             PlaceholderText="glm-4.6v / glm-4.6v-flashx / glm-4.6v-flash"/>
-                    <TextBlock Text="API Key 经 Windows DPAPI 加密后仅存本机。"
-                               Foreground="#6B7280" FontSize="12"/>
-                </StackPanel>
-            </Border>
+                <Border Classes="card" Padding="20">
+                    <StackPanel Spacing="12">
+                        <TextBlock Text="语言分析大模型" Classes="section-title"/>
+                        <TextBlock Text="用于薄弱知识点归纳、复习建议和练习方向生成。"
+                                   Foreground="{StaticResource MutedTextBrush}" FontSize="13"/>
+                        <Grid ColumnDefinitions="150,*" RowDefinitions="Auto,Auto,Auto" RowSpacing="10" ColumnSpacing="12">
+                            <TextBlock Grid.Row="0" Grid.Column="0" Classes="field-label" Text="智谱 API Key"/>
+                            <TextBox Grid.Row="0" Grid.Column="1"
+                                     Text="{Binding LanguageGlmApiKey}"
+                                     PasswordChar="*"
+                                     PlaceholderText="可与图片识别共用，也可单独配置"/>
+                            <TextBlock Grid.Row="1" Grid.Column="0" Classes="field-label" Text="模型名称"/>
+                            <TextBox Grid.Row="1" Grid.Column="1"
+                                     Text="{Binding LanguageGlmModel}"
+                                     PlaceholderText="glm-4.6 / glm-4-flash / glm-4-plus"/>
+                            <TextBlock Grid.Row="2" Grid.Column="0" Classes="field-label" Text="接口路径"/>
+                            <TextBox Grid.Row="2" Grid.Column="1"
+                                     Text="{Binding LanguageGlmBaseUrl}"
+                                     PlaceholderText="https://open.bigmodel.cn/api/paas/v4"/>
+                        </Grid>
+                    </StackPanel>
+                </Border>
 
-            <StackPanel Orientation="Horizontal" Spacing="8">
-                <Button Content="保存" Command="{Binding SaveCommand}" Classes="accent"/>
-                <Button Content="重新加载" Command="{Binding LoadCommand}"/>
-                <TextBlock Text="{Binding Status}" VerticalAlignment="Center"
-                           Foreground="#6B7280" FontSize="12" Margin="8,0,0,0"/>
+                <Border Classes="card" Padding="20">
+                    <StackPanel Spacing="12">
+                        <TextBlock Text="数据存储" Classes="section-title"/>
+                        <Grid ColumnDefinitions="150,*" RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="10" ColumnSpacing="12">
+                            <TextBlock Grid.Row="0" Grid.Column="0" Classes="field-label" Text="数据目录"/>
+                            <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding DataDirectory}" IsReadOnly="True"/>
+                            <TextBlock Grid.Row="1" Grid.Column="0" Classes="field-label" Text="数据库文件"/>
+                            <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding DatabasePath}" IsReadOnly="True"/>
+                            <TextBlock Grid.Row="2" Grid.Column="0" Classes="field-label" Text="卷子图片目录"/>
+                            <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding PaperImageDirectory}" IsReadOnly="True"/>
+                            <TextBlock Grid.Row="3" Grid.Column="0" Classes="field-label" Text="日志目录"/>
+                            <TextBox Grid.Row="3" Grid.Column="1" Text="{Binding LogDirectory}" IsReadOnly="True"/>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <Border Classes="card" Padding="20">
+                    <StackPanel Spacing="12">
+                        <TextBlock Text="导出设置" Classes="section-title"/>
+                        <Grid ColumnDefinitions="150,*" RowDefinitions="Auto,Auto,Auto" RowSpacing="10" ColumnSpacing="12">
+                            <TextBlock Grid.Row="0" Grid.Column="0" Classes="field-label" Text="默认导出目录"/>
+                            <Grid Grid.Row="0" Grid.Column="1" ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                <TextBox Grid.Column="0" Text="{Binding ExportDirectory}"
+                                         PlaceholderText="例如 D:\Exports\KnowledgeWeakness"/>
+                                <Button Grid.Column="1" Content="浏览…" Command="{Binding PickExportDirectoryCommand}"/>
+                            </Grid>
+                            <TextBlock Grid.Row="1" Grid.Column="0" Classes="field-label" Text="默认格式"/>
+                            <ComboBox Grid.Row="1" Grid.Column="1"
+                                      ItemsSource="{Binding ExportFormats}"
+                                      SelectedItem="{Binding ExportFormat}"
+                                      HorizontalAlignment="Left" Width="200"/>
+                            <TextBlock Grid.Row="2" Grid.Column="0" Classes="field-label" Text="包含原图"/>
+                            <CheckBox Grid.Row="2" Grid.Column="1" IsChecked="{Binding ExportIncludeImages}"/>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <Border Classes="card" Padding="20">
+                    <StackPanel Spacing="12">
+                        <TextBlock Text="数据备份" Classes="section-title"/>
+                        <TextBlock Text="将数据库和卷子图片打包为单个 zip，方便迁移到其他电脑。恢复时会先备份当前数据库再覆盖。"
+                                   Foreground="{StaticResource MutedTextBrush}" FontSize="13" TextWrapping="Wrap"/>
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <Button Content="备份到 zip…" Command="{Binding BackupCommand}" Classes="accent"/>
+                            <Button Content="从 zip 恢复…" Command="{Binding RestoreCommand}"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <Border Classes="summary-pill">
+                    <TextBlock Text="密钥经 Windows DPAPI 加密后仅存本机。修改大模型配置后，下一次识别或分析会直接使用新配置。"
+                               Foreground="{StaticResource MutedTextBrush}"
+                               FontSize="12"
+                               TextWrapping="Wrap"/>
+                </Border>
             </StackPanel>
+        </ScrollViewer>
 
-        </StackPanel>
-    </ScrollViewer>
+        <Border Grid.Row="1" Classes="card" Padding="16,12">
+            <StackPanel Orientation="Horizontal" Spacing="10">
+                <Button Content="保存设置" Command="{Binding SaveCommand}" Classes="accent"/>
+                <Button Content="重新加载" Command="{Binding LoadCommand}"/>
+                <TextBlock Text="{Binding Status}"
+                           VerticalAlignment="Center"
+                           Foreground="{StaticResource MutedTextBrush}"
+                           FontSize="12"
+                           Margin="8,0,0,0"/>
+            </StackPanel>
+        </Border>
+    </Grid>
 </UserControl>

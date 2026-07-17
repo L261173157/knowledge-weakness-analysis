@@ -2,6 +2,7 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
 using KnowledgeWeakness.Core.AI;
+using KnowledgeWeakness.Core.Abstractions;
 using KnowledgeWeakness.Core.Analysis;
 using Microsoft.Extensions.Logging;
 
@@ -9,15 +10,26 @@ namespace KnowledgeWeakness.Infrastructure.AI;
 
 public class GlmWeaknessAnalyzer(
     HttpClient httpClient,
-    GlmVisionOptions options,
+    ISettingsRepository settings,
     ILogger<GlmWeaknessAnalyzer> logger) : IWeaknessAnalyzer
 {
     public async Task<AiWeaknessAnalysisResult> AnalyzeAsync(
         AiWeaknessAnalysisRequest request,
         CancellationToken ct = default)
     {
+        var options = new GlmVisionOptions
+        {
+            ApiKey = await settings.GetSecretAsync(SettingsKeys.LanguageGlmApiKey, ct)
+                     ?? await settings.GetSecretAsync(SettingsKeys.GlmApiKey, ct),
+            Model = await settings.GetAsync(SettingsKeys.LanguageGlmModel, ct)
+                    ?? await settings.GetAsync(SettingsKeys.GlmModel, ct)
+                    ?? "glm-4.6",
+            BaseUrl = await settings.GetAsync(SettingsKeys.LanguageGlmBaseUrl, ct)
+                      ?? "https://open.bigmodel.cn/api/paas/v4"
+        };
+
         if (string.IsNullOrWhiteSpace(options.ApiKey))
-            throw new InvalidOperationException("GLM API Key 未配置，请在设置页填写。");
+            throw new InvalidOperationException("语言模型 GLM API Key 未配置，请在设置页填写。");
 
         if (request.Candidates.Count == 0)
             return new AiWeaknessAnalysisResult("没有可分析的薄弱题。", [], "{}");

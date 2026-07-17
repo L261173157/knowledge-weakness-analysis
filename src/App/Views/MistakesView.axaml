@@ -1,0 +1,82 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:KnowledgeWeakness.App.ViewModels"
+             xmlns:domain="using:KnowledgeWeakness.Core.Domain"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="720"
+             x:Class="KnowledgeWeakness.App.Views.MistakesView"
+             x:DataType="vm:MistakesViewModel">
+
+    <Grid RowDefinitions="Auto,Auto,*,Auto" RowSpacing="14">
+        <Border Grid.Row="0" Classes="card" Padding="16">
+            <StackPanel Spacing="10">
+                <Grid ColumnDefinitions="Auto,*,Auto,*,Auto,*" ColumnSpacing="10">
+                    <TextBlock Grid.Column="0" Classes="field-label" Text="学生"/>
+                    <ComboBox Grid.Column="1"
+                              ItemsSource="{Binding Students}"
+                              SelectedItem="{Binding SelectedStudent}"
+                              HorizontalAlignment="Stretch">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate DataType="domain:Student">
+                                <TextBlock Text="{Binding Name}"/>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                    <TextBlock Grid.Column="2" Classes="field-label" Text="学科"/>
+                    <ComboBox Grid.Column="3"
+                              ItemsSource="{Binding Subjects}"
+                              SelectedItem="{Binding SelectedSubject}"
+                              HorizontalAlignment="Stretch">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate DataType="domain:Subject">
+                                <TextBlock Text="{Binding Name}"/>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                    <TextBlock Grid.Column="4" Classes="field-label" Text="知识点"/>
+                    <ComboBox Grid.Column="5"
+                              ItemsSource="{Binding KnowledgePoints}"
+                              SelectedItem="{Binding SelectedKnowledgePoint}"
+                              HorizontalAlignment="Stretch"/>
+                </Grid>
+                <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="10">
+                    <CheckBox Grid.Column="0" Content="只看有批注的"
+                              IsChecked="{Binding OnlyWithComment}"
+                              VerticalAlignment="Center"/>
+                    <Button Grid.Column="2" Content="刷新" Command="{Binding LoadCommand}" Classes="accent"/>
+                    <Button Grid.Column="3" Content="清除筛选" Command="{Binding ClearFilterCommand}"/>
+                </Grid>
+            </StackPanel>
+        </Border>
+
+        <Border Grid.Row="1" Classes="summary-pill">
+            <TextBlock Text="{Binding Summary}" Foreground="#334155" FontWeight="SemiBold" TextWrapping="Wrap"/>
+        </Border>
+
+        <Border Grid.Row="2" Classes="card-flush">
+            <DataGrid ItemsSource="{Binding Mistakes}"
+                      IsReadOnly="True"
+                      HeadersVisibility="Column"
+                      CanUserResizeColumns="True"
+                      HorizontalScrollBarVisibility="Auto">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="日期" Binding="{Binding PaperDate, StringFormat=yyyy-MM-dd}" Width="100"/>
+                    <DataGridTextColumn Header="学生" Binding="{Binding StudentName}" Width="80"/>
+                    <DataGridTextColumn Header="学科" Binding="{Binding SubjectName}" Width="80"/>
+                    <DataGridTextColumn Header="卷子" Binding="{Binding PaperTitle}" Width="140" MinWidth="100"/>
+                    <DataGridTextColumn Header="知识点" Binding="{Binding KnowledgePoint}" Width="140" MinWidth="100"/>
+                    <DataGridTextColumn Header="题号" Binding="{Binding QuestionNumber}" Width="68"/>
+                    <DataGridTextColumn Header="题干" Binding="{Binding Stem}" Width="2*" MinWidth="180"/>
+                    <DataGridTextColumn Header="学生答案" Binding="{Binding StudentAnswer}" Width="*" MinWidth="100"/>
+                    <DataGridTextColumn Header="标准答案" Binding="{Binding StandardAnswer}" Width="*" MinWidth="100"/>
+                    <DataGridTextColumn Header="批注" Binding="{Binding TeacherComment}" Width="*" MinWidth="80"/>
+                </DataGrid.Columns>
+            </DataGrid>
+        </Border>
+
+        <Border Grid.Row="3" Classes="status-bar">
+            <TextBlock Text="{Binding Status}" Classes="status-text"/>
+        </Border>
+    </Grid>
+</UserControl>

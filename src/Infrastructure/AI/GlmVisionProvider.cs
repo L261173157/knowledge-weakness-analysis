@@ -12,7 +12,7 @@ public class GlmVisionOptions
     public string Model { get; set; } = "glm-4.6v";
     public string? ApiKey { get; set; }
     public double Temperature { get; set; } = 0.1;
-    public int TimeoutSeconds { get; set; } = 240;
+    public int TimeoutSeconds { get; set; } = 600;
 }
 
 public class GlmVisionProvider(

@@ -48,11 +48,13 @@ public partial class SubjectsViewModel : ViewModelBase
             Status = "编码和名称均不能为空";
             return;
         }
+
         if (await _repo.GetByCodeAsync(NewCode.Trim()) is not null)
         {
             Status = $"编码 {NewCode} 已存在";
             return;
         }
+
         await _repo.AddAsync(new Subject { Code = NewCode.Trim(), Name = NewName.Trim() });
         NewCode = "";
         NewName = "";

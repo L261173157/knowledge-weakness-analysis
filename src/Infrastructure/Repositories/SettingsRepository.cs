@@ -15,7 +15,16 @@ public class SettingsRepository(IDbContextFactory<AppDbContext> dbFactory) : ISe
         await using var db = await dbFactory.CreateDbContextAsync(ct);
         var row = await db.AppSettings.AsNoTracking().FirstOrDefaultAsync(s => s.Key == key, ct);
         if (row is null) return null;
-        return row.IsEncrypted ? Unprotect(row.Value) : row.Value;
+        if (!row.IsEncrypted) return row.Value;
+
+        try
+        {
+            return Unprotect(row.Value);
+        }
+        catch (Exception ex) when (ex is CryptographicException or FormatException)
+        {
+            return null;
+        }
     }
 
     public async Task<string?> GetSecretAsync(string key, CancellationToken ct = default)
@@ -78,6 +87,10 @@ public class SettingsRepository(IDbContextFactory<AppDbContext> dbFactory) : ISe
             var payload = Convert.FromBase64String(stored["dpapi:".Length..]);
             var dec = ProtectedData.Unprotect(payload, optionalEntropy: null, DataProtectionScope.CurrentUser);
             return Encoding.UTF8.GetString(dec);
+        }
+        if (stored.StartsWith("dpapi:", StringComparison.Ordinal))
+        {
+            throw new CryptographicException("DPAPI-protected setting cannot be read on this platform.");
         }
         if (stored.StartsWith("plain:", StringComparison.Ordinal))
         {

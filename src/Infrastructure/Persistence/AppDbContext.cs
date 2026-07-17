@@ -11,6 +11,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Question> Questions => Set<Question>();
     public DbSet<StudentAnswer> StudentAnswers => Set<StudentAnswer>();
     public DbSet<AppSetting> AppSettings => Set<AppSetting>();
+    public DbSet<KnowledgePoint> KnowledgePoints => Set<KnowledgePoint>();
 
     protected override void OnModelCreating(ModelBuilder mb)
     {
@@ -60,6 +61,16 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             e.HasKey(x => x.Key);
             e.Property(x => x.Key).HasMaxLength(100);
             e.Property(x => x.Value).IsRequired();
+        });
+
+        mb.Entity<KnowledgePoint>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Name).HasMaxLength(120).IsRequired();
+            e.Property(x => x.Keywords).IsRequired();
+            e.Property(x => x.Description).HasMaxLength(500);
+            e.HasOne(x => x.Subject).WithMany().HasForeignKey(x => x.SubjectId).OnDelete(DeleteBehavior.Cascade);
+            e.HasIndex(x => new { x.SubjectId, x.Name }).IsUnique();
         });
     }
 }

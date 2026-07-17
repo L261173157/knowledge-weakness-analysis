@@ -24,20 +24,33 @@ public partial class App : Application
 
     public override void OnFrameworkInitializationCompleted()
     {
-        var dataDir = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "KnowledgeWeakness");
-        Directory.CreateDirectory(dataDir);
+        AppPaths.EnsureDirectories();
+        AppPaths.MigrateLegacyProgramDataIfNeeded();
+
+        // Apply any pending restore staged in a previous session BEFORE we
+        // construct the DbContext factory — otherwise live SQLite handles
+        // would race with the file replacement.
+        if (BackupService.TryApplyPendingRestore(out var restoreError) && restoreError is null)
+        {
+            BackupService.RecordRestoreStatus("Restore completed successfully.");
+            // applied — nothing more to do; fall through to normal startup
+        }
+        else if (!string.IsNullOrEmpty(restoreError))
+        {
+            BackupService.RecordRestoreStatus("Restore failed: " + restoreError);
+            // Will be surfaced via logs once Serilog is up; for now write to debug.
+            System.Diagnostics.Debug.WriteLine($"[Restore] Failed to apply pending restore: {restoreError}");
+        }
 
         Log.Logger = new LoggerConfiguration()
             .MinimumLevel.Information()
-            .WriteTo.File(Path.Combine(dataDir, "logs", "app-.log"),
+            .WriteTo.File(Path.Combine(AppPaths.LogDirectory, "app-.log"),
                 rollingInterval: RollingInterval.Day, retainedFileCountLimit: 14,
                 shared: true, flushToDiskInterval: TimeSpan.FromSeconds(1))
             .CreateLogger();
 
         var services = new ServiceCollection();
-        ConfigureServices(services, dataDir);
+        ConfigureServices(services);
         Services = services.BuildServiceProvider();
 
         InfrastructureServiceCollectionExtensions.EnsureDatabaseCreated(Services);
@@ -61,10 +74,9 @@ public partial class App : Application
         base.OnFrameworkInitializationCompleted();
     }
 
-    private static void ConfigureServices(IServiceCollection services, string dataDir)
+    private static void ConfigureServices(IServiceCollection services)
     {
-        var dbPath = Path.Combine(dataDir, "app.db");
-        services.AddInfrastructure($"Data Source={dbPath}");
+        services.AddInfrastructure($"Data Source={AppPaths.DatabasePath}");
 
         services.AddLogging(b =>
         {
@@ -77,8 +89,12 @@ public partial class App : Application
         services.AddSingleton<MainWindowViewModel>();
         services.AddTransient<StudentsViewModel>();
         services.AddTransient<SubjectsViewModel>();
+        services.AddTransient<KnowledgePointsViewModel>();
         services.AddTransient<SettingsViewModel>();
         services.AddTransient<PaperImportViewModel>();
+        services.AddTransient<PapersViewModel>();
+        services.AddTransient<MistakesViewModel>();
         services.AddTransient<AnalysisViewModel>();
+        services.AddTransient<TrendsViewModel>();
     }
 }

@@ -4,6 +4,16 @@ obj/
 **/bin/
 **/obj/
 
+# Project-local toolchain sandboxes (SDK cache, NuGet store, redirected obj).
+# These fill with telemetry, sentinels, and downloaded packages — never commit.
+.dotnet/
+.nuget/
+.appdata/
+.tmpobj/
+.tmpbin/
+AppData/
+.zcode/
+
 # User and IDE state
 .vs/
 .vscode/

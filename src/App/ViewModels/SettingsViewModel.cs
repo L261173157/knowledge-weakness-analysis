@@ -1,6 +1,8 @@
+using System;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using KnowledgeWeakness.App.Services;
 using KnowledgeWeakness.Core.Abstractions;
 using KnowledgeWeakness.Infrastructure.AI;
 
@@ -9,36 +11,144 @@ namespace KnowledgeWeakness.App.ViewModels;
 public partial class SettingsViewModel : ViewModelBase
 {
     private readonly ISettingsRepository _settings;
+    private readonly IFilePickerService _filePicker;
 
-    [ObservableProperty]
-    private string _glmApiKey = "";
+    [ObservableProperty] private string _visionGlmApiKey = "";
+    [ObservableProperty] private string _visionGlmModel = "glm-4.6v";
+    [ObservableProperty] private string _visionGlmBaseUrl = "https://open.bigmodel.cn/api/paas/v4";
+    [ObservableProperty] private string _languageGlmApiKey = "";
+    [ObservableProperty] private string _languageGlmModel = "glm-4.6";
+    [ObservableProperty] private string _languageGlmBaseUrl = "https://open.bigmodel.cn/api/paas/v4";
+    [ObservableProperty] private string _exportDirectory = "";
+    [ObservableProperty] private string _exportFormat = "Markdown";
+    [ObservableProperty] private bool _exportIncludeImages;
+    [ObservableProperty] private string _status = "";
 
-    [ObservableProperty]
-    private string _glmModel = "glm-4.6v";
+    public string DataDirectory => AppPaths.DataDirectory;
+    public string DatabasePath => AppPaths.DatabasePath;
+    public string PaperImageDirectory => AppPaths.PaperImageDirectory;
+    public string LogDirectory => AppPaths.LogDirectory;
+    public string ProgramDirectory => AppPaths.ProgramDirectory;
+    public string[] ExportFormats { get; } = ["Markdown", "CSV", "JSON", "PDF"];
 
-    [ObservableProperty]
-    private string _status = "";
-
-    public SettingsViewModel(ISettingsRepository settings)
+    public SettingsViewModel(ISettingsRepository settings, IFilePickerService filePicker)
     {
         _settings = settings;
+        _filePicker = filePicker;
         _ = LoadAsync();
+    }
+
+    [RelayCommand]
+    private async Task PickExportDirectoryAsync()
+    {
+        var dir = await _filePicker.PickDirectoryAsync("Select default export directory");
+        if (!string.IsNullOrWhiteSpace(dir)) ExportDirectory = dir;
+    }
+
+    [RelayCommand]
+    private async Task BackupAsync()
+    {
+        try
+        {
+            var path = await _filePicker.PickBackupSaveAsync($"KnowledgeWeakness_backup_{DateTime.Now:yyyyMMdd_HHmmss}.zip");
+            if (string.IsNullOrEmpty(path)) { Status = "Backup canceled."; return; }
+
+            var directory = System.IO.Path.GetDirectoryName(path)!;
+            var saved = await BackupService.ExportAsync(directory);
+            if (!string.Equals(saved, path, StringComparison.OrdinalIgnoreCase) && System.IO.File.Exists(saved))
+            {
+                if (System.IO.File.Exists(path)) System.IO.File.Delete(path);
+                System.IO.File.Move(saved, path);
+            }
+
+            Status = $"Backup saved to: {path}";
+        }
+        catch (Exception ex)
+        {
+            Status = "Backup failed: " + ex.Message;
+        }
+    }
+
+    [RelayCommand]
+    private async Task RestoreAsync()
+    {
+        try
+        {
+            var path = await _filePicker.PickBackupZipAsync();
+            if (string.IsNullOrEmpty(path)) { Status = "Restore canceled."; return; }
+
+            var staged = await BackupService.StageRestoreAsync(path);
+            Status = $"Backup validated and staged at: {staged.PendingDirectory}. Restart the app to apply the restore.";
+        }
+        catch (Exception ex)
+        {
+            Status = "Restore failed; current data was not changed: " + ex.Message;
+        }
     }
 
     [RelayCommand]
     private async Task LoadAsync()
     {
-        GlmApiKey = await _settings.GetSecretAsync(SettingsKeys.GlmApiKey) ?? "";
-        GlmModel = await _settings.GetAsync(SettingsKeys.GlmModel) ?? "glm-4.6v";
-        Status = "已加载";
+        var legacyKey = await _settings.GetSecretAsync(SettingsKeys.GlmApiKey) ?? "";
+        var legacyModel = await _settings.GetAsync(SettingsKeys.GlmModel);
+
+        VisionGlmApiKey = await _settings.GetSecretAsync(SettingsKeys.VisionGlmApiKey) ?? legacyKey;
+        VisionGlmModel = await _settings.GetAsync(SettingsKeys.VisionGlmModel) ?? legacyModel ?? "glm-4.6v";
+        VisionGlmBaseUrl = await _settings.GetAsync(SettingsKeys.VisionGlmBaseUrl) ?? "https://open.bigmodel.cn/api/paas/v4";
+
+        LanguageGlmApiKey = await _settings.GetSecretAsync(SettingsKeys.LanguageGlmApiKey) ?? legacyKey;
+        LanguageGlmModel = await _settings.GetAsync(SettingsKeys.LanguageGlmModel) ?? "glm-4.6";
+        LanguageGlmBaseUrl = await _settings.GetAsync(SettingsKeys.LanguageGlmBaseUrl) ?? "https://open.bigmodel.cn/api/paas/v4";
+
+        var savedExportDirectory = await _settings.GetAsync(SettingsKeys.ExportDirectory);
+        ExportDirectory = string.IsNullOrWhiteSpace(savedExportDirectory)
+                          || savedExportDirectory == AppPaths.LegacyExportDirectory
+            ? AppPaths.ExportDirectory
+            : savedExportDirectory;
+        ExportFormat = await _settings.GetAsync(SettingsKeys.ExportFormat) ?? "Markdown";
+        ExportIncludeImages = bool.TryParse(
+            await _settings.GetAsync(SettingsKeys.ExportIncludeImages),
+            out var includeImages) && includeImages;
+
+        var restoreStatus = BackupService.ReadRestoreStatus();
+        if (!string.IsNullOrWhiteSpace(restoreStatus))
+        {
+            Status = restoreStatus;
+            BackupService.ClearRestoreStatus();
+            return;
+        }
+
+        Status = "Loaded";
     }
 
     [RelayCommand]
     private async Task SaveAsync()
     {
-        if (!string.IsNullOrWhiteSpace(GlmApiKey))
-            await _settings.SetSecretAsync(SettingsKeys.GlmApiKey, GlmApiKey.Trim());
-        await _settings.SetAsync(SettingsKeys.GlmModel, string.IsNullOrWhiteSpace(GlmModel) ? "glm-4.6v" : GlmModel.Trim());
-        Status = "已保存";
+        await SaveSecretOrClearAsync(SettingsKeys.VisionGlmApiKey, VisionGlmApiKey);
+        await SaveSecretOrClearAsync(SettingsKeys.LanguageGlmApiKey, LanguageGlmApiKey);
+        await _settings.DeleteAsync(SettingsKeys.GlmApiKey);
+
+        await _settings.SetAsync(SettingsKeys.VisionGlmModel, Normalize(VisionGlmModel, "glm-4.6v"));
+        await _settings.SetAsync(SettingsKeys.VisionGlmBaseUrl, Normalize(VisionGlmBaseUrl, "https://open.bigmodel.cn/api/paas/v4"));
+        await _settings.SetAsync(SettingsKeys.LanguageGlmModel, Normalize(LanguageGlmModel, "glm-4.6"));
+        await _settings.SetAsync(SettingsKeys.LanguageGlmBaseUrl, Normalize(LanguageGlmBaseUrl, "https://open.bigmodel.cn/api/paas/v4"));
+        await _settings.SetAsync(SettingsKeys.ExportDirectory, Normalize(ExportDirectory, AppPaths.ExportDirectory));
+        await _settings.SetAsync(SettingsKeys.ExportFormat, Normalize(ExportFormat, "Markdown"));
+        await _settings.SetAsync(SettingsKeys.ExportIncludeImages, ExportIncludeImages.ToString());
+
+        Status = "Saved";
+    }
+
+    private async Task SaveSecretOrClearAsync(string key, string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            await _settings.DeleteAsync(key);
+        else
+            await _settings.SetSecretAsync(key, value.Trim());
+    }
+
+    private static string Normalize(string value, string fallback)
+    {
+        return string.IsNullOrWhiteSpace(value) ? fallback : value.Trim();
     }
 }

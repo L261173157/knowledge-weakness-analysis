@@ -26,8 +26,13 @@ public class VisionModelFactory(
     {
         var opts = new GlmVisionOptions
         {
-            ApiKey = settings.GetSecretAsync(SettingsKeys.GlmApiKey).GetAwaiter().GetResult(),
-            Model = settings.GetAsync(SettingsKeys.GlmModel).GetAwaiter().GetResult() ?? "glm-4.6v"
+            ApiKey = settings.GetSecretAsync(SettingsKeys.VisionGlmApiKey).GetAwaiter().GetResult()
+                     ?? settings.GetSecretAsync(SettingsKeys.GlmApiKey).GetAwaiter().GetResult(),
+            Model = settings.GetAsync(SettingsKeys.VisionGlmModel).GetAwaiter().GetResult()
+                    ?? settings.GetAsync(SettingsKeys.GlmModel).GetAwaiter().GetResult()
+                    ?? "glm-4.6v",
+            BaseUrl = settings.GetAsync(SettingsKeys.VisionGlmBaseUrl).GetAwaiter().GetResult()
+                      ?? "https://open.bigmodel.cn/api/paas/v4"
         };
         var client = httpFactory.CreateClient("glm");
         return new GlmVisionProvider(client, opts, loggerFactory.CreateLogger<GlmVisionProvider>());

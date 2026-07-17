@@ -7,11 +7,16 @@ public record ExtractedQuestion(
     string Number,
     QuestionType Type,
     string Stem,
-    string? StandardAnswer,
-    string StudentAnswer,
+    IReadOnlyDictionary<string, string> Options,
+    string? StandardAnswerOption,
+    string? StandardAnswerText,
+    string? StudentAnswerOption,
+    string StudentAnswerText,
     bool IsCorrect,
     double? PartialScore,
-    string? TeacherComment);
+    string? TeacherComment,
+    bool? TeacherIsCorrect = null,
+    bool? AiIsCorrect = null);
 
 public record PaperExtraction(
     string? Title,

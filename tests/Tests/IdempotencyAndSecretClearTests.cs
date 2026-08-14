@@ -110,11 +110,10 @@ public class PaperImportSaveIdempotencyTests
         students.Students.Add(new Student { Id = 1, Name = "S", Grade = "G" });
         var subjects = new StubSubjectRepo();
         subjects.Subjects.Add(new Subject { Id = 1, Code = "ge", Name = "地理" });
-        var settings = new InMemorySettingsRepo();
         var preprocessor = new ImagePreprocessor();
         var picker = new StubFilePicker();
         return new PaperImportViewModel(
-            students, subjects, paperRepo, settings,
+            students, subjects, paperRepo,
             new StubVisionFactory(), preprocessor, picker);
     }
 

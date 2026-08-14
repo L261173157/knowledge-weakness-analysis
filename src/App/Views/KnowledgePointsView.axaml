@@ -58,7 +58,7 @@
                     <TextBox Text="{Binding Selected.Description}" AcceptsReturn="True" MinHeight="60" TextWrapping="Wrap"/>
                     <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,8,0,0">
                         <Button Content="保存修改" Command="{Binding SaveCommand}" Classes="accent"/>
-                        <Button Content="删除" Command="{Binding DeleteCommand}" Classes="danger"/>
+                        <Button Content="{Binding DeleteButtonText}" Command="{Binding DeleteCommand}" Classes="danger"/>
                     </StackPanel>
                 </StackPanel>
                 <Border IsVisible="{Binding Selected, Converter={x:Static ObjectConverters.IsNull}}"

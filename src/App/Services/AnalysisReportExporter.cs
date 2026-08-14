@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -42,7 +43,10 @@ public static class AnalysisReportExporter
                 await File.WriteAllTextAsync(path, BuildCsv(report), new UTF8Encoding(true));
                 break;
             case "json":
-                await File.WriteAllTextAsync(path, BuildJson(report), new UTF8Encoding(false));
+                // Markdown and JSON reference images by relative path, so stage
+                // copies next to the report before writing.
+                var jsonImages = await StageImageFilesAsync(report, path);
+                await File.WriteAllTextAsync(path, BuildJson(report, jsonImages), new UTF8Encoding(false));
                 break;
             case "pdf":
                 // QuestPDF's GeneratePdf is synchronous and CPU-bound (font/layout
@@ -52,13 +56,50 @@ public static class AnalysisReportExporter
                 await Task.Run(() => BuildPdf(report).GeneratePdf(path));
                 break;
             default:
-                await File.WriteAllTextAsync(path, BuildMarkdown(report), new UTF8Encoding(false));
+                var markdownImages = await StageImageFilesAsync(report, path);
+                await File.WriteAllTextAsync(path, BuildMarkdown(report, markdownImages), new UTF8Encoding(false));
                 break;
         }
         return path;
     }
 
-    private static string BuildMarkdown(AnalysisReportData r)
+    /// <summary>
+    /// Copies the report's original paper images into a
+    /// <c>&lt;report-name&gt;_files</c> folder next to the exported file and
+    /// returns records whose <see cref="ReportPaperImages.ImageFiles"/> are
+    /// paths relative to the report (folder/name). Copies run on the thread
+    /// pool so large batches never block the UI caller. CSV stays a pure
+    /// table and PDF embeds images inline, so neither calls this.
+    /// </summary>
+    private static async Task<List<ReportPaperImages>> StageImageFilesAsync(AnalysisReportData report, string reportPath)
+    {
+        if (!report.IncludeImages || report.PapersWithImages.Count == 0) return [];
+
+        var folder = Path.Combine(
+            Path.GetDirectoryName(reportPath)!,
+            Path.GetFileNameWithoutExtension(reportPath) + "_files");
+        var folderName = Path.GetFileName(folder);
+        Directory.CreateDirectory(folder);
+
+        var staged = new List<ReportPaperImages>();
+        foreach (var paper in report.PapersWithImages)
+        {
+            var relativeNames = new List<string>();
+            for (var i = 0; i < paper.ImageFiles.Count; i++)
+            {
+                var source = paper.ImageFiles[i];
+                // Prefix with paper id and page index so legacy imports whose
+                // files only differ by directory cannot collide.
+                var fileName = $"p{paper.PaperId}_{i + 1}_{Path.GetFileName(source)}";
+                await Task.Run(() => File.Copy(source, Path.Combine(folder, fileName), overwrite: true));
+                relativeNames.Add($"{folderName}/{fileName}");
+            }
+            staged.Add(paper with { ImageFiles = relativeNames });
+        }
+        return staged;
+    }
+
+    private static string BuildMarkdown(AnalysisReportData r, IReadOnlyList<ReportPaperImages> stagedImages)
     {
         var sb = new StringBuilder();
         sb.AppendLine($"# 薄弱分析报告");
@@ -90,8 +131,29 @@ public static class AnalysisReportExporter
             }
             sb.AppendLine();
         }
+
+        if (stagedImages.Count > 0)
+        {
+            sb.AppendLine("## 附录：原卷图片");
+            sb.AppendLine();
+            foreach (var paper in stagedImages)
+            {
+                sb.AppendLine($"### {paper.PaperTitle}");
+                sb.AppendLine();
+                foreach (var image in paper.ImageFiles)
+                {
+                    sb.AppendLine($"![{paper.PaperTitle} 原卷]({EscapeMarkdownLink(image)})");
+                }
+                sb.AppendLine();
+            }
+        }
         return sb.ToString();
     }
+
+    // Escape each path segment separately so slashes survive (Uri.EscapeDataString
+    // would turn them into %2F) while spaces/Chinese punctuation stay link-safe.
+    private static string EscapeMarkdownLink(string relativePath) =>
+        string.Join("/", relativePath.Split('/').Select(Uri.EscapeDataString));
 
     private static string BuildCsv(AnalysisReportData r)
     {
@@ -112,7 +174,7 @@ public static class AnalysisReportExporter
         return sb.ToString();
     }
 
-    private static string BuildJson(AnalysisReportData r)
+    private static string BuildJson(AnalysisReportData r, IReadOnlyList<ReportPaperImages> stagedImages)
     {
         var payload = new
         {
@@ -141,6 +203,14 @@ public static class AnalysisReportExporter
                     e.StandardAnswer,
                     e.TeacherComment
                 })
+            }),
+            // Empty when the "包含原图" export option is off; otherwise paths
+            // relative to this report file (staged copies in *_files/).
+            PaperImages = stagedImages.Select(p => new
+            {
+                p.PaperId,
+                p.PaperTitle,
+                Images = p.ImageFiles
             })
         };
         return JsonSerializer.Serialize(payload, new JsonSerializerOptions
@@ -202,6 +272,34 @@ public static class AnalysisReportExporter
                                 }
                             }
                         });
+                    }
+
+                    if (r.IncludeImages && r.PapersWithImages.Count > 0)
+                    {
+                        col.Item().PaddingTop(6).Text("附录：原卷图片").FontSize(15).SemiBold();
+                        foreach (var paper in r.PapersWithImages)
+                        {
+                            col.Item().PaddingTop(8)
+                                .Text($"{paper.PaperTitle}（{paper.ImageFiles.Count} 张）")
+                                .SemiBold().FontSize(12);
+                            foreach (var file in paper.ImageFiles)
+                            {
+                                col.Item().PaddingTop(4).Element(container =>
+                                {
+                                    try
+                                    {
+                                        container.Image(file).FitWidth();
+                                    }
+                                    catch (Exception)
+                                    {
+                                        // One unreadable or unsupported image must
+                                        // not abort the whole report.
+                                        container.Text($"图片加载失败：{Path.GetFileName(file)}")
+                                            .FontColor(Colors.Grey.Darken1).FontSize(9);
+                                    }
+                                });
+                            }
+                        }
                     }
                 });
 

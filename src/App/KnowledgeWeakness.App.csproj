@@ -16,6 +16,10 @@
   <ItemGroup>
     <PackageReference Include="Avalonia" Version="12.0.1" />
     <PackageReference Include="Avalonia.Controls.DataGrid" Version="12.0.0" />
+    <!-- Explicit pin keeps the transitive Avalonia.Skia (pulled in by
+         LiveCharts) aligned with the app's Avalonia 12.0.1 instead of
+         floating to its declared minimum or a newer minor. -->
+    <PackageReference Include="Avalonia.Skia" Version="12.0.1" />
     <PackageReference Include="Avalonia.Desktop" Version="12.0.1" />
     <PackageReference Include="Avalonia.Themes.Fluent" Version="12.0.1" />
     <PackageReference Include="Avalonia.Fonts.Inter" Version="12.0.1" />
@@ -29,7 +33,10 @@
     <PackageReference Include="Serilog" Version="4.3.1" />
     <PackageReference Include="Serilog.Extensions.Logging" Version="10.0.0" />
     <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
-    <PackageReference Include="LiveChartsCore.SkiaSharpView.Avalonia" Version="2.0.4" />
+    <!-- 2.0.x stable targets Avalonia 11 / SkiaSharp 2.88 and breaks under
+         Avalonia 12's SkiaSharp 3 stack. The 2.1.0-dev line is the only
+         published build targeting Avalonia 12 + net10.0. -->
+    <PackageReference Include="LiveChartsCore.SkiaSharpView.Avalonia" Version="2.1.0-dev-798" />
     <PackageReference Include="QuestPDF" Version="2025.7.0" />
   </ItemGroup>
 

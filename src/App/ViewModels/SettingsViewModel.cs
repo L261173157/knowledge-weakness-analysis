@@ -41,7 +41,7 @@ public partial class SettingsViewModel : ViewModelBase
     [RelayCommand]
     private async Task PickExportDirectoryAsync()
     {
-        var dir = await _filePicker.PickDirectoryAsync("Select default export directory");
+        var dir = await _filePicker.PickDirectoryAsync("选择默认导出目录");
         if (!string.IsNullOrWhiteSpace(dir)) ExportDirectory = dir;
     }
 
@@ -51,7 +51,7 @@ public partial class SettingsViewModel : ViewModelBase
         try
         {
             var path = await _filePicker.PickBackupSaveAsync($"KnowledgeWeakness_backup_{DateTime.Now:yyyyMMdd_HHmmss}.zip");
-            if (string.IsNullOrEmpty(path)) { Status = "Backup canceled."; return; }
+            if (string.IsNullOrEmpty(path)) { Status = "已取消备份"; return; }
 
             var directory = System.IO.Path.GetDirectoryName(path)!;
             var saved = await BackupService.ExportAsync(directory);
@@ -61,11 +61,11 @@ public partial class SettingsViewModel : ViewModelBase
                 System.IO.File.Move(saved, path);
             }
 
-            Status = $"Backup saved to: {path}";
+            Status = $"备份已保存至：{path}";
         }
         catch (Exception ex)
         {
-            Status = "Backup failed: " + ex.Message;
+            Status = "备份失败：" + ex.Message;
         }
     }
 
@@ -75,14 +75,14 @@ public partial class SettingsViewModel : ViewModelBase
         try
         {
             var path = await _filePicker.PickBackupZipAsync();
-            if (string.IsNullOrEmpty(path)) { Status = "Restore canceled."; return; }
+            if (string.IsNullOrEmpty(path)) { Status = "已取消恢复"; return; }
 
             var staged = await BackupService.StageRestoreAsync(path);
-            Status = $"Backup validated and staged at: {staged.PendingDirectory}. Restart the app to apply the restore.";
+            Status = $"备份已校验并暂存于：{staged.PendingDirectory}。重启应用后生效。";
         }
         catch (Exception ex)
         {
-            Status = "Restore failed; current data was not changed: " + ex.Message;
+            Status = "恢复失败，当前数据未改动：" + ex.Message;
         }
     }
 
@@ -118,7 +118,7 @@ public partial class SettingsViewModel : ViewModelBase
             return;
         }
 
-        Status = "Loaded";
+        Status = "设置已加载";
     }
 
     [RelayCommand]
@@ -136,7 +136,7 @@ public partial class SettingsViewModel : ViewModelBase
         await _settings.SetAsync(SettingsKeys.ExportFormat, Normalize(ExportFormat, "Markdown"));
         await _settings.SetAsync(SettingsKeys.ExportIncludeImages, ExportIncludeImages.ToString());
 
-        Status = "Saved";
+        Status = "设置已保存";
     }
 
     private async Task SaveSecretOrClearAsync(string key, string value)

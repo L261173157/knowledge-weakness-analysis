@@ -2,6 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:KnowledgeWeakness.App.ViewModels"
              xmlns:domain="using:KnowledgeWeakness.Core.Domain"
+             xmlns:lvc="using:LiveChartsCore.SkiaSharpView.Avalonia"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="700"
@@ -43,19 +44,10 @@
         </Border>
 
         <Grid Grid.Row="2" ColumnDefinitions="3*,2*" ColumnSpacing="14">
-            <Border Grid.Column="0" Classes="card" Padding="20">
-                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="6">
-                    <TextBlock Text="折线图暂不可用"
-                               FontWeight="SemiBold"
-                               HorizontalAlignment="Center"
-                               Foreground="{StaticResource TextBrush}"/>
-                    <TextBlock Text="LiveChartsCore 与 Avalonia 12 的 SkiaSharp 依赖版本冲突，待升级到兼容版本后恢复。"
-                               Foreground="{StaticResource MutedTextBrush}"
-                               FontSize="12"
-                               MaxWidth="280"
-                               TextWrapping="Wrap"
-                               TextAlignment="Center"/>
-                </StackPanel>
+            <Border Grid.Column="0" Classes="card" Padding="12">
+                <lvc:CartesianChart Series="{Binding Series}"
+                                    XAxes="{Binding XAxes}"
+                                    YAxes="{Binding YAxes}"/>
             </Border>
 
             <Border Grid.Column="1" Classes="card-flush">

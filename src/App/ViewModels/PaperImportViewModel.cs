@@ -66,7 +66,6 @@ public partial class PaperImportViewModel : ViewModelBase
         IStudentRepository studentRepo,
         ISubjectRepository subjectRepo,
         IPaperRepository paperRepo,
-        ISettingsRepository settings,
         IVisionModelFactory visionFactory,
         ImagePreprocessor preprocessor,
         IFilePickerService filePicker)
@@ -92,7 +91,7 @@ public partial class PaperImportViewModel : ViewModelBase
             foreach (var s in await _subjectRepo.ListAsync()) Subjects.Add(s);
             SelectedSubject = Subjects.FirstOrDefault();
 
-            Status = "Ready";
+            Status = "就绪";
         }
         catch (Exception ex)
         {

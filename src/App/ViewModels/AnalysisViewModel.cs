@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -75,20 +76,61 @@ public partial class AnalysisViewModel : ViewModelBase
             if (string.IsNullOrWhiteSpace(directory))
                 directory = AppPaths.ExportDirectory;
             var format = formatOverride ?? await _settings.GetAsync(SettingsKeys.ExportFormat) ?? "Markdown";
+            var includeImages = bool.TryParse(
+                await _settings.GetAsync(SettingsKeys.ExportIncludeImages),
+                out var includeImagesValue) && includeImagesValue;
+            var paperImages = includeImages ? CollectPaperImages() : [];
 
             var report = new AnalysisReportData(
                 SelectedStudent?.Name ?? "全部学生",
                 SelectedSubject?.Name ?? "全部学科",
                 Summary,
                 DateTime.Now,
-                Points.ToList());
+                Points.ToList(),
+                includeImages,
+                paperImages);
             var path = await AnalysisReportExporter.ExportAsync(report, directory, format);
-            Status = $"已导出至：{path}";
+            var imageCount = paperImages.Sum(p => p.ImageFiles.Count);
+            Status = imageCount > 0
+                ? $"已导出至：{path}（含 {imageCount} 张原卷图）"
+                : $"已导出至：{path}";
         }
         catch (Exception ex)
         {
             Status = "导出失败：" + ex.Message;
         }
+    }
+
+    /// <summary>
+    /// Collects the on-disk original paper images for every paper that the
+    /// current weakness points' example questions refer to. Path resolution
+    /// mirrors <c>PapersViewModel.LoadDetailAsync</c> (relative names under the
+    /// current paper directory, legacy absolute paths with basename fallback).
+    /// </summary>
+    private List<ReportPaperImages> CollectPaperImages()
+    {
+        var paperIds = Points.SelectMany(p => p.Examples).Select(e => e.PaperId).ToHashSet();
+        var result = new List<ReportPaperImages>();
+        foreach (var paper in _currentPapers
+                     .Where(p => paperIds.Contains(p.Id))
+                     .OrderBy(p => p.Date)
+                     .ThenBy(p => p.Id))
+        {
+            if (string.IsNullOrEmpty(paper.OriginalImagePaths)) continue;
+
+            var files = paper.OriginalImagePaths
+                .Split('|', StringSplitOptions.RemoveEmptyEntries)
+                .Select(raw => PaperImagePathResolver.Resolve(raw, AppPaths.PaperImageDirectory))
+                .Where(File.Exists)
+                .ToList();
+            if (files.Count == 0) continue;
+
+            result.Add(new ReportPaperImages(
+                paper.Id,
+                string.IsNullOrWhiteSpace(paper.Title) ? $"#{paper.Id}" : paper.Title,
+                files));
+        }
+        return result;
     }
 
     partial void OnSelectedPointChanged(WeaknessPointRow? value)
